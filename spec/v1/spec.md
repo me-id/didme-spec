@@ -687,3 +687,35 @@ This is enabled by:
 - signed canonical cores – guarantee tamper-evident integrity  
 
 These features allow did:me to evolve toward decentralized, distributed, or mirrored resolution models in the future.
+
+--
+
+## 13. Correct did:me order
+~~~
+@context
+id
+controller
+alsoKnownAs
+sequence
+prev
+
+hardwareBound
+biometricProtected
+userVerificationMethod
+deviceModel
+
+coreCbor
+currentCore
+keyHistory
+
+verificationMethod
+authentication
+assertionMethod
+capabilityInvocation
+keyAgreement
+
+service(s)
+updatePolicy
+attestations
+proof
+~~~

@@ -301,6 +301,8 @@ pre code { white-space: pre-wrap; }
     Considerations</a></li>
     <li><a href="#decentralization-and-federation" id="toc-decentralization-and-federation">12. Decentralization and
     Federation</a></li>
+    <li><a href="#correct-didme-order" id="toc-correct-didme-order">13.
+    Correct did:me order</a></li>
     </ul></li>
     </ul>
   </nav>
@@ -936,6 +938,34 @@ signature(new-core-cbor) verifies under new.updatePolicy.allowedVerificationMeth
     - signed canonical cores – guarantee tamper-evident integrity</p>
     <p>These features allow did:me to evolve toward decentralized,
     distributed, or mirrored resolution models in the future.</p>
+    <p>–</p>
+    <h2 id="correct-didme-order">13. Correct did:me order</h2>
+    <pre><code>@context
+id
+controller
+alsoKnownAs
+sequence
+prev
+
+hardwareBound
+biometricProtected
+userVerificationMethod
+deviceModel
+
+coreCbor
+currentCore
+keyHistory
+
+verificationMethod
+authentication
+assertionMethod
+capabilityInvocation
+keyAgreement
+
+service
+updatePolicy
+attestations
+proof</code></pre>
   </main>
 
 </div>
