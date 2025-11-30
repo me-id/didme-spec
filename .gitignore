@@ -1,0 +1,24 @@
+# macOS system files
+.DS_Store
+
+# VS Code settings
+.vscode/
+
+# Node tooling (if used for static site generation, spec rendering, etc.)
+node_modules/
+
+# Python cache (if used for tooling or testing)
+__pycache__/
+
+# Build / output / cache directories
+dist/
+build/
+.cache/
+out/
+
+# Logs
+*.log
+
+# Environment files (if any tooling requires them)
+.env
+*.env
