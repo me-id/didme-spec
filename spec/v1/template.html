@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>$if(title)$$title$$else$Specification$endif$</title>
+
+  <link rel="stylesheet" href="$css$">
+
+  <style>
+    pre code { white-space: pre-wrap; }
+  </style>
+</head>
+
+<body>
+
+<div class="mobile-header">
+  <button id="menuButton">☰ Menu</button>
+</div>
+
+<div class="wrapper">
+
+  <!-- Left sidebar TOC -->
+  <nav id="sidebar">
+    <h2>Contents</h2>
+    $toc$
+  </nav>
+
+  <main id="content">
+    $body$
+  </main>
+
+</div>
+
+<script>
+  // Mobile toggle
+  const btn = document.getElementById('menuButton');
+  const sidebar = document.getElementById('sidebar');
+  btn.addEventListener('click', () => {
+    sidebar.classList.toggle('open');
+  });
+</script>
+
+</body>
+</html>

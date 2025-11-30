@@ -1,0 +1,9 @@
+pandoc spec.md \
+  --template template.html \
+  --css style.css \
+  --resource-path=. \
+  --standalone \
+  --embed-resources \
+  --toc \
+  --toc-depth=3 \
+  -o index.html

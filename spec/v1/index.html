@@ -1,0 +1,953 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Specification</title>
+
+  <style type="text/css">
+body {
+margin: 0;
+padding: 0;
+font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+font-size: 16px;
+line-height: 1.6;
+background: #fafafa;
+color: #333;
+}
+.wrapper {
+display: flex;
+align-items: flex-start;
+}
+
+.mobile-header {
+display: none;
+background: #fff;
+border-bottom: 1px solid #ddd;
+padding: 10px 16px;
+position: sticky;
+top: 0;
+z-index: 1000;
+}
+#menuButton {
+font-size: 18px;
+padding: 8px 12px;
+border: none;
+background: #0077cc;
+color: #fff;
+border-radius: 6px;
+cursor: pointer;
+}
+
+#sidebar {
+width: 260px;
+padding: 20px;
+background: #ffffff;
+border-right: 1px solid #e0e0e0;
+height: 100vh;
+position: sticky;
+top: 0;
+overflow-y: auto;
+transition: transform 0.3s ease;
+}
+#sidebar h2 {
+font-size: 18px;
+margin-top: 0;
+}
+#sidebar a {
+color: #005aa0;
+text-decoration: none;
+}
+#sidebar a:hover {
+text-decoration: underline;
+}
+
+#content {
+flex: 1;
+padding: 40px;
+max-width: 900px;
+margin: 0 auto;
+background: #fafafa;
+}
+h1, h2, h3, h4 {
+color: #222;
+margin-top: 2.4em;
+margin-bottom: 0.6em;
+font-weight: 600;
+}
+h1 {
+font-size: 2.2em;
+border-bottom: 2px solid #eee;
+padding-bottom: 0.3em;
+}
+h2 {
+font-size: 1.8em;
+border-bottom: 1px solid #eee;
+padding-bottom: 0.2em;
+}
+h3 { font-size: 1.4em; }
+h4 { font-size: 1.2em; }
+p { margin: 0.8em 0; }
+
+pre {
+background: #2d2d2d;
+padding: 16px;
+border-radius: 6px;
+overflow-x: auto;
+}
+code {
+font-family: SFMono-Regular, Consolas, Menlo, monospace;
+font-size: 0.95em;
+color: #f8f8f2;
+}
+p code, li code {
+background: #eee;
+color: #c7254e;
+padding: 2px 4px;
+border-radius: 4px;
+}
+
+table {
+border-collapse: collapse;
+margin: 1.5em 0;
+width: 100%;
+overflow-x: auto;
+display: block;
+}
+th, td {
+border: 1px solid #ddd;
+padding: 10px;
+}
+th {
+background: #f0f0f0;
+font-weight: 600;
+}
+
+blockquote {
+border-left: 4px solid #ccc;
+padding-left: 16px;
+color: #666;
+margin-left: 0;
+}
+
+@media (max-width: 900px) {
+.wrapper {
+flex-direction: column;
+}
+.mobile-header {
+display: block;
+}
+#sidebar {
+position: fixed;
+top: 0;
+left: 0;
+height: 100%;
+transform: translateX(-100%);
+z-index: 999;
+box-shadow: 2px 0 12px rgba(0,0,0,0.1);
+}
+#sidebar.open {
+transform: translateX(0);
+}
+#content {
+padding: 20px;
+margin: 0;
+max-width: 100%;
+}
+h1 {
+font-size: 1.8em;
+}
+h2 {
+font-size: 1.4em;
+}
+pre {
+font-size: 0.85em;
+}
+}</style>
+
+  <style>
+pre code { white-space: pre-wrap; }
+</style>
+</head>
+
+<body>
+
+<div class="mobile-header">
+  <button id="menuButton">☰ Menu</button>
+</div>
+
+<div class="wrapper">
+
+  <!-- Left sidebar TOC -->
+  <nav id="sidebar">
+    <h2>Contents</h2>
+    <ul>
+    <li><a href="#didme-method-specification-v1" id="toc-didme-method-specification-v1">did:me Method Specification
+    (v1)</a>
+    <ul>
+    <li><a href="#introduction" id="toc-introduction">1.
+    Introduction</a></li>
+    <li><a href="#did-format" id="toc-did-format">2. DID Format</a>
+    <ul>
+    <li><a href="#did-syntax" id="toc-did-syntax">2.1 DID
+    Syntax</a></li>
+    <li><a href="#allowed-characters" id="toc-allowed-characters">2.2
+    Allowed characters</a></li>
+    <li><a href="#length" id="toc-length">2.3 Length</a></li>
+    <li><a href="#example" id="toc-example">2.4 Example</a></li>
+    </ul></li>
+    <li><a href="#did-resolution" id="toc-did-resolution">3. DID
+    Resolution</a>
+    <ul>
+    <li><a href="#optional-directory-based-resolution" id="toc-optional-directory-based-resolution">3.1 Optional
+    Directory-Based Resolution</a></li>
+    <li><a href="#http-status-codes" id="toc-http-status-codes">3.2 HTTP
+    Status Codes</a></li>
+    </ul></li>
+    <li><a href="#data-model-overview" id="toc-data-model-overview">4.
+    Data Model Overview</a>
+    <ul>
+    <li><a href="#method-specific-extension-properties" id="toc-method-specific-extension-properties">4.1 Method-Specific
+    Extension Properties</a></li>
+    </ul></li>
+    <li><a href="#core-object" id="toc-core-object">5. Core Object</a>
+    <ul>
+    <li><a href="#purpose" id="toc-purpose">5.1 Purpose</a></li>
+    <li><a href="#core-schema-conceptual" id="toc-core-schema-conceptual">5.2 Core Schema
+    (Conceptual)</a></li>
+    <li><a href="#corekey-schema" id="toc-corekey-schema">5.3 CoreKey
+    Schema</a></li>
+    <li><a href="#coreupdatepolicy" id="toc-coreupdatepolicy">5.4
+    CoreUpdatePolicy</a></li>
+    <li><a href="#coreservice-schema" id="toc-coreservice-schema">5.5
+    CoreService Schema</a></li>
+    <li><a href="#canonical-cbor-encoding" id="toc-canonical-cbor-encoding">5.6 Canonical CBOR
+    Encoding</a></li>
+    <li><a href="#cid-derivation" id="toc-cid-derivation">5.7 CID
+    Derivation</a></li>
+    <li><a href="#payment-and-crypto-address-services" id="toc-payment-and-crypto-address-services">5.8 Payment and Crypto
+    Address Services</a></li>
+    <li><a href="#eu-digital-identity-wallet-interoperability" id="toc-eu-digital-identity-wallet-interoperability">5.9 EU Digital
+    Identity Wallet Interoperability</a>
+    <ul>
+    <li><a href="#eudi-wallet-subject-compatibility" id="toc-eudi-wallet-subject-compatibility">5.9.1 EUDI Wallet Subject
+    Compatibility</a></li>
+    <li><a href="#oidc4vci-and-oidc4vp-service-endpoints" id="toc-oidc4vci-and-oidc4vp-service-endpoints">5.9.2 OIDC4VCI and
+    OIDC4VP Service Endpoints</a></li>
+    <li><a href="#optional-service-type-for-eudi-integration" id="toc-optional-service-type-for-eudi-integration">5.9.3 Optional
+    Service Type for EUDI Integration</a></li>
+    </ul></li>
+    <li><a href="#wallet-binding-and-domain-verification" id="toc-wallet-binding-and-domain-verification">5.10 Wallet Binding
+    and Domain Verification</a></li>
+    </ul></li>
+    <li><a href="#data-integrity-proofs-optional-p-256-anchor" id="toc-data-integrity-proofs-optional-p-256-anchor">6. Data
+    Integrity Proofs (Optional P-256 Anchor)</a>
+    <ul>
+    <li><a href="#purpose-and-motivation" id="toc-purpose-and-motivation">6.1 Purpose and Motivation</a></li>
+    <li><a href="#proof-object-schema" id="toc-proof-object-schema">6.2
+    Proof Object Schema</a></li>
+    <li><a href="#cryptosuite-es256-jws-cid-2025" id="toc-cryptosuite-es256-jws-cid-2025">6.3 Cryptosuite:
+    es256-jws-cid-2025</a></li>
+    <li><a href="#ecdsa-s-value-canonicality" id="toc-ecdsa-s-value-canonicality">6.4 ECDSA S-Value
+    Canonicality</a></li>
+    <li><a href="#interoperability-and-usage-notes" id="toc-interoperability-and-usage-notes">6.5 Interoperability and
+    Usage Notes</a></li>
+    </ul></li>
+    <li><a href="#signatures-and-attestations" id="toc-signatures-and-attestations">7. Signatures and
+    Attestations</a>
+    <ul>
+    <li><a href="#core-signature" id="toc-core-signature">7.1 Core
+    Signature</a></li>
+    <li><a href="#additional-signatures" id="toc-additional-signatures">7.2 Additional Signatures</a></li>
+    </ul></li>
+    <li><a href="#operations" id="toc-operations">8. Operations</a>
+    <ul>
+    <li><a href="#create" id="toc-create">8.1 Create</a></li>
+    <li><a href="#update" id="toc-update">8.2 Update</a>
+    <ul>
+    <li><a href="#multiple-controllers" id="toc-multiple-controllers">8.2.1 Multiple Controllers</a></li>
+    </ul></li>
+    <li><a href="#deactivate" id="toc-deactivate">8.3
+    Deactivate</a></li>
+    </ul></li>
+    <li><a href="#did-document-projection" id="toc-did-document-projection">9. DID Document Projection</a>
+    <ul>
+    <li><a href="#field-mapping-from-core" id="toc-field-mapping-from-core">9.1 Field Mapping from
+    Core</a></li>
+    <li><a href="#method-specific-extensions-non-core-metadata" id="toc-method-specific-extensions-non-core-metadata">9.2
+    Method-Specific Extensions (Non-Core Metadata)</a>
+    <ul>
+    <li><a href="#domain-verification-objects" id="toc-domain-verification-objects">9.3 Domain Verification
+    Objects</a></li>
+    </ul></li>
+    <li><a href="#requirements" id="toc-requirements">9.4
+    Requirements</a></li>
+    </ul></li>
+    <li><a href="#json-ld-context" id="toc-json-ld-context">10. JSON-LD
+    Context</a>
+    <ul>
+    <li><a href="#alsoknownas-optional-correlation-identifiers" id="toc-alsoknownas-optional-correlation-identifiers">10.1
+    alsoKnownAs (Optional Correlation Identifiers)</a></li>
+    <li><a href="#hardware-bound-and-biometric-protected" id="toc-hardware-bound-and-biometric-protected">10.2 Hardware Bound
+    and Biometric Protected</a></li>
+    <li><a href="#user-verification-method" id="toc-user-verification-method">10.3 User Verification
+    Method</a></li>
+    <li><a href="#device-and-model" id="toc-device-and-model">10.4
+    Device and Model</a></li>
+    </ul></li>
+    <li><a href="#security-considerations" id="toc-security-considerations">11. Security
+    Considerations</a></li>
+    <li><a href="#decentralization-and-federation" id="toc-decentralization-and-federation">12. Decentralization and
+    Federation</a></li>
+    </ul></li>
+    </ul>
+  </nav>
+
+  <main id="content">
+    <h1 id="didme-method-specification-v1">did:me Method Specification
+    (v1)</h1>
+    <p><strong>Status:</strong> Beta<br />
+    <strong>Specification URI:</strong>
+    https://me-id.org/ns/did-me/spec/v1 <strong>JSON-LD
+    Context:</strong> https://me-id.org/ns/did-me/v1</p>
+    <hr />
+    <h2 id="introduction">1. Introduction</h2>
+    <p><code>did:me</code> is a DID method designed for:</p>
+    <ul>
+    <li>Stable identifiers for individuals, pseudonymous personas,
+    organizations, and groups</li>
+    <li>Identifiers <strong>not derived from cryptographic
+    keys</strong>, ensuring DID stability across rekeying</li>
+    <li>CID-versioned core snapshots that define canonical DID
+    state<br />
+    </li>
+    <li>Classical and post-quantum verification methods</li>
+    <li>Compatibility with EU Digital Identity Wallets, OpenID4VCI /
+    OpenID4VP, and ZK-proof circuits</li>
+    </ul>
+    <p>The authoritative DID state is represented by a <strong>core
+    object</strong>, encoded using canonical DAG-CBOR, hashed to a
+    <strong>CID</strong>, and signed by the DID controller. The public
+    DID Document is a JSON projection derived from this signed core.</p>
+    <p><code>did:me</code> identifiers are fundamentally self-hosted
+    DIDs whose authoritative state lives on the controller’s wallet,
+    device, or agent. No central registry is required for validity or
+    resolution. Decentralization is enabled by the method’s
+    cryptographic update structure, including:</p>
+    <ul>
+    <li>Monotonic <code>sequence</code> counters for update
+    ordering<br />
+    </li>
+    <li><code>prev</code> links referencing the CID of the previous
+    core</li>
+    <li>A verifiable, tamper-evident chain of signed core snapshots</li>
+    </ul>
+    <hr />
+    <h2 id="did-format">2. DID Format</h2>
+    <p><code>did:me</code> identifiers are <strong>not derived from keys
+    or core CIDs</strong>.<br />
+    This ensures DID stability even as keys rotate or services
+    change.</p>
+    <h3 id="did-syntax">2.1 DID Syntax</h3>
+    <p>A <code>did:me</code> identifier MUST conform to:</p>
+    <pre><code>did:me:&lt;identifier&gt;</code></pre>
+    <p>Where <code>&lt;identifier&gt;</code> is the <strong>full
+    Bech32-encoded string</strong>, including: - the HRP
+    <code>&quot;me&quot;</code><br />
+    - the separator <code>&quot;1&quot;</code><br />
+    - the 5-bit data payload<br />
+    - the Bech32 checksum</p>
+    <p>Identifiers are generated by:</p>
+    <ol type="1">
+    <li>Generating <strong>16 bytes (128 bits)</strong> of
+    cryptographically secure entropy<br />
+    </li>
+    <li>Converting the entropy into <strong>5-bit groups</strong> (8→5
+    conversion, padded)<br />
+    </li>
+    <li>Encoding the result via <strong>Bech32</strong> with HRP
+    <code>&quot;me&quot;</code></li>
+    </ol>
+    <p><strong>Formal representation:</strong></p>
+    <pre><code>identifier = Bech32.encode(hrp=&quot;me&quot;, data=convertBits(entropy[16], 8→5))</code></pre>
+    <p>The checksum included in the Bech32 output MUST be preserved, as
+    it provides error-detection and guards against accidental
+    corruption.</p>
+    <h3 id="allowed-characters">2.2 Allowed characters</h3>
+    <p>The data portion of the Bech32 identifier (after “me1”) MUST
+    match Bech32’s lowercase character set:</p>
+    <pre><code>^[023456789acdefghjklmnpqrstuvwxyz]+$</code></pre>
+    <p>(Excludes: <code>1</code>, <code>b</code>, <code>i</code>,
+    <code>o</code>.)</p>
+    <h3 id="length">2.3 Length</h3>
+    <p>Given 16 bytes of entropy: - 16 bytes × 8 bits = 128 bits -
+    Converted to ~26 five-bit groups - Bech32 encoding produces ~26–35
+    characters, including checksum</p>
+    <h3 id="example">2.4 Example</h3>
+    <pre><code>did:me:me1q90w7wd0qpsl6rh6tsg4y0e0a60p3f60g</code></pre>
+    <hr />
+    <h2 id="did-resolution">3. DID Resolution</h2>
+    <h3 id="optional-directory-based-resolution">3.1 Optional
+    Directory-Based Resolution</h3>
+    <p>Controllers MAY publish their DID Document to one or more public
+    directories (e.g., reallyme.directory). If published, a DID Document
+    can be retrieved via:</p>
+    <pre><code>GET https://reallyme.directory/dids/&lt;id&gt;</code></pre>
+    <p>This endpoint is optional and not required for DID validity or
+    resolution. Local resolvers MAY reconstruct DID state using only the
+    signed core chain.</p>
+    <h3 id="http-status-codes">3.2 HTTP Status Codes</h3>
+    <ul>
+    <li><code>200 OK</code> — DID Document returned<br />
+    </li>
+    <li><code>404 Not Found</code> — DID not registered</li>
+    </ul>
+    <hr />
+    <h2 id="data-model-overview">4. Data Model Overview</h2>
+    <p>A <code>did:me</code> DID Document is a standard DID Document
+    projected from a signed core object and: - Uses
+    <code>verificationMethod</code>, <code>authentication</code>,
+    <code>assertionMethod</code>, <code>capabilityInvocation</code>,
+    <code>keyAgreement</code>, and <code>service</code> as defined in
+    DID Core. - Adds the following method-specific fields: -
+    <code>sequence</code> — monotonic per-DID update counter<br />
+    - <code>prev</code> — CID of the previous core (or
+    <code>null</code>)<br />
+    - <code>currentCore</code> — CID of the current DAG-CBOR core
+    object<br />
+    - <code>keyHistory</code> — ordered list of prior core CIDs -
+    <code>updatePolicy</code> — rules defining which verification
+    methods may authorize updates<br />
+    - <code>attestations</code> — signatures over the core object by the
+    DID controller<br />
+    - <code>proof</code> — optional Data Integrity Proof over
+    <code>currentCore</code><br />
+    - <code>domainVerification</code> — optional DNS/HTTP proof binding
+    the DID to a domain</p>
+    <h3 id="method-specific-extension-properties">4.1 Method-Specific
+    Extension Properties</h3>
+    <p><code>did:me</code> supports optional, method-specific properties
+    that extend the base DID Document data model. These properties are
+    defined in the did:me JSON-LD context:</p>
+    <p>https://me-id.org/ns/did-me/v1</p>
+    <p>The context defines terms such as: - currentCore - keyHistory -
+    attestations - updatePolicy - domainVerification - and additional
+    optional metadata fields (e.g., hardwareBound, biometricProtected,
+    deviceModel)</p>
+    <p>All method-specific terms: - MAY appear in a DID Document - MUST
+    NOT affect the validity of the core snapshot or signature - MUST be
+    ignored by processors that do not understand them, per DID Core
+    rules - MUST NOT change the canonical core object unless explicitly
+    listed in the core schema</p>
+    <p>These extensions allow did:me to support richer metadata while
+    preserving DID Core compatibility and forward extensibility.</p>
+    <hr />
+    <h2 id="core-object">5. Core Object</h2>
+    <h3 id="purpose">5.1 Purpose</h3>
+    <p>The <strong>core object</strong> is the canonical representation
+    of DID state. It is:</p>
+    <ul>
+    <li>encoded using <strong>canonical DAG-CBOR</strong></li>
+    <li>hashed to a <strong>CID</strong> (CIDv1, SHA-256, base32)</li>
+    <li><strong>signed</strong> by the DID controller</li>
+    <li>used to derive the public JSON DID Document (“projection”)</li>
+    </ul>
+    <p>Although the DID string never changes, all mutable cryptographic
+    state is reflected through successive, signed core snapshots.</p>
+    <p><code>currentCore</code> contains the CID of the latest snapshot.
+    <code>keyHistory</code> contains only the CIDs of prior core
+    snapshots, in ascending sequence order. <code>prev</code> references
+    the immediately preceding core CID and enforces canonical update
+    ordering.</p>
+    <p><code>prev</code> enables: - rollback prevention (reject older
+    snapshots) - replay protection (reject repeated snapshots) - fork
+    detection (reject alternative update branches)</p>
+    <p>This design provides: - deterministic state integrity -
+    tamper-evident version history - key rotation without changing the
+    DID - future support for decentralized or mirrored resolvers</p>
+    <p>The <code>keyHistory</code> array MUST contain only the CIDs of
+    all prior core snapshots and MUST NOT include the
+    <code>currentCore</code> CID. The CIDs in <code>keyHistory</code>
+    MUST be ordered in strict ascending sequence order, representing the
+    canonical update history from the first snapshot to the most recent
+    prior snapshot.</p>
+    <h3 id="core-schema-conceptual">5.2 Core Schema (Conceptual)</h3>
+    <pre><code>Core = {
+  id: string,                       // &quot;did:me:&lt;id&gt;&quot;
+  sequence: uint64,                 // monotonic update counter.  This always starts at 1.
+  prev: CID | null,                 // CID of previous core.   If null, then prev is omitted.
+  controller: string | string[],    // one or more controllers
+  controllerKeys: [CoreKey],        // declared keys
+  authenticationKeys: [string],     // references into controllerKeys
+  assertionKeys: [string],
+  keyAgreementKeys: [string],
+  services: [CoreService],          // service endpoints
+  updatePolicy: CoreUpdatePolicy,   // defines which verification methods may authorize updates
+  updatedAt: RFC3339 timestamp
+}</code></pre>
+    <p>This schema represents exactly the content protected by the
+    signature. Anything not included here (e.g., proof,
+    domainVerification) is not part of the core and does not affect DID
+    validity.</p>
+    <p>A did:me DID MAY have one or more controllers. If only one
+    controller is present, it is typically the DID subject itself.</p>
+    <h3 id="corekey-schema">5.3 CoreKey Schema</h3>
+    <p>All of the following are required values:</p>
+    <pre><code>CoreKey = {
+  id: string,                     // e.g., &quot;#ed25519&quot;
+  type: string,                   // e.g., &quot;Multikey&quot;, &quot;MLDSA87Key2024&quot;
+  algorithm: string,              // e.g., &quot;ES256&quot;, &quot;Ed25519&quot;, &quot;ML-DSA-87&quot;
+  publicKeyMultibase: string
+}</code></pre>
+    <p>Keys listed here define: - which verification methods exist -
+    which methods can sign updates (via updatePolicy) - which methods
+    serve authentication, assertion, invocation, or key agreement</p>
+    <p>All key relationship references (authenticationKeys,
+    assertionKeys, keyAgreementKeys, and allowedVerificationMethods in
+    updatePolicy) MUST refer to a CoreKey.id present in
+    controllerKeys.</p>
+    <h3 id="coreupdatepolicy">5.4 CoreUpdatePolicy</h3>
+    <p>The update policy is part of the canonical core object and
+    defines which verification methods are authorized to sign core
+    updates.</p>
+    <pre><code>CoreUpdatePolicy = {
+  allowedVerificationMethods: [string]   // references into controllerKeys by id.  These strings MUST match a CoreKey.id.
+}</code></pre>
+    <h3 id="coreservice-schema">5.5 CoreService Schema</h3>
+    <pre><code>CoreService = {
+  id: string,                     // &quot;#hub&quot;, &quot;#openid&quot;, &quot;#wallet&quot;
+  type: string,                   // DID Core service type or did:me extension
+  serviceEndpoint: any,           // URI or structured JSON
+  version?: string
+}</code></pre>
+    <p>Service endpoints are part of the core snapshot and therefore
+    immutable within each version.</p>
+    <h3 id="canonical-cbor-encoding">5.6 Canonical CBOR Encoding</h3>
+    <p>The core object MUST be encoded using canonical CBOR: - Map keys
+    sorted lexicographically by UTF-8 bytes - Only definite-length
+    arrays/maps - UTF-8 text keys - No undefined or extraneous fields -
+    Deterministic encoding per RFC 8949 / DAG-CBOR restrictions</p>
+    <p>This ensures: - identical encoding across languages - identical
+    CIDs across implementations - provable state integrity</p>
+    <p>Implementations MUST reject cores containing indefinite-length
+    items or map keys not in strictly sorted order.</p>
+    <h3 id="cid-derivation">5.7 CID Derivation</h3>
+    <p>The CID is computed as follows:</p>
+    <ul>
+    <li><strong>Codec</strong>: <code>dag-cbor</code><br />
+    </li>
+    <li><strong>Multihash</strong>: <code>SHA-256</code><br />
+    </li>
+    <li><strong>CID version</strong>: v1</li>
+    <li><strong>Multibase</strong>: base32 (lowercase)</li>
+    </ul>
+    <p>This CID is published as: <sub></sub>~ “currentCore”: “<cid>”
+    <sub></sub>~</p>
+    <p>and used to verify signatures over the core.</p>
+    <h3 id="payment-and-crypto-address-services">5.8 Payment and Crypto
+    Address Services</h3>
+    <p>did:me supports chain-agnostic crypto payment addresses through
+    standard DID Core service entries. These addresses are
+    non-authoritative metadata and are not part of the core update
+    authorization model unless the corresponding public keys also appear
+    in controllerKeys.</p>
+    <p>A DID MAY include one or more payment-related services such as: •
+    Bitcoin (bech32) • Ethereum and EVM chains (0x-prefixed addresses) •
+    Solana (base58) • Avalanche (X-Chain, C-Chain, or P-Chain formats) •
+    Any other blockchain or digital payment network</p>
+    <p>Payment addresses MUST be expressed as a structured JSON
+    serviceEndpoint object, for example:</p>
+    <pre><code>{
+  &quot;id&quot;: &quot;#wallet&quot;,
+  &quot;type&quot;: &quot;PaymentService&quot;,
+  &quot;serviceEndpoint&quot;: {
+    &quot;btc&quot;: &quot;bc1q...&quot;,
+    &quot;eth&quot;: &quot;0x1234...&quot;,
+    &quot;sol&quot;: &quot;So1111...&quot;,
+    &quot;avax&quot;: &quot;0xabc...&quot;
+  }
+}</code></pre>
+    <h3 id="eu-digital-identity-wallet-interoperability">5.9 EU Digital
+    Identity Wallet Interoperability</h3>
+    <p>did:me is designed to interoperate cleanly with the European
+    Digital Identity Wallet (EUDI Wallet) architecture, including PID,
+    ARF, and EBSI profiles. DID Documents MAY include service endpoints
+    and proof formats that support credential issuance, presentation,
+    and trust-chain interoperability.</p>
+    <h4 id="eudi-wallet-subject-compatibility">5.9.1 EUDI Wallet Subject
+    Compatibility</h4>
+    <p>did:me identifiers: • are stable, non-key-derived identifiers •
+    support rekeying without subject identifier changes • are fully
+    compatible as subject_id values in PID / ARF data models • remain
+    resolvable even when controller cryptographic material rotates</p>
+    <h4 id="oidc4vci-and-oidc4vp-service-endpoints">5.9.2 OIDC4VCI and
+    OIDC4VP Service Endpoints</h4>
+    <p>did:me supports EUDI wallet credential flows via standard DID
+    Core service entries:</p>
+    <pre><code>{
+  &quot;id&quot;: &quot;#openid-credential-offer&quot;,
+  &quot;type&quot;: &quot;OpenID4VCI&quot;,
+  &quot;serviceEndpoint&quot;: &quot;&lt;issuer-endpoint&gt;&quot;
+}
+
+{
+  &quot;id&quot;: &quot;#oid4vp&quot;,
+  &quot;type&quot;: &quot;OpenID4VP&quot;,
+  &quot;serviceEndpoint&quot;: &quot;&lt;presentation-endpoint&gt;&quot;
+}</code></pre>
+    <p>Resolvers MAY treat these endpoints as wallet-compatible
+    credential interfaces.</p>
+    <h4 id="optional-service-type-for-eudi-integration">5.9.3 Optional
+    Service Type for EUDI Integration</h4>
+    <p>Implementations MAY define a dedicated service entry for EUDI
+    wallet interactions:</p>
+    <pre><code>{
+  &quot;id&quot;: &quot;#eudi&quot;,
+  &quot;type&quot;: &quot;EudiCredentialService&quot;,
+  &quot;serviceEndpoint&quot;: &quot;&lt;eudi-service-url&gt;&quot;
+}</code></pre>
+    <p>This is functionally equivalent to using OpenID4VCI and
+    OpenID4VP, but provides clearer semantic typing for wallets that
+    recognize EUDI-specific services.</p>
+    <h3 id="wallet-binding-and-domain-verification">5.10 Wallet Binding
+    and Domain Verification</h3>
+    <p>DID Documents MAY include domainVerification entries used for: •
+    binding a DID to a legally recognized domain • proving issuer
+    authenticity • supporting EUDI trust chain requirements</p>
+    <p>These domain bindings are optional metadata and do not alter core
+    state.</p>
+    <hr />
+    <h2 id="data-integrity-proofs-optional-p-256-anchor">6. Data
+    Integrity Proofs (Optional P-256 Anchor)</h2>
+    <h3 id="purpose-and-motivation">6.1 Purpose and Motivation</h3>
+    <p><code>did:me</code> supports optional
+    <code>DataIntegrityProof</code> objects using ES256 (P-256).</p>
+    <p>These proofs provide a classical-cryptography signature anchor
+    suitable for:</p>
+    <ul>
+    <li>EU Digital Identity Wallet trust infrastructure</li>
+    <li>zero-knowledge proof circuits</li>
+    <li>verifiers that require standardized P-256 semantics</li>
+    <li>environments that cannot process canonical DAG-CBOR</li>
+    </ul>
+    <p>These proofs are non-authoritative: the authoritative
+    cryptographic rail is the signature over the canonical DAG-CBOR core
+    snapshot.</p>
+    <p>DI proofs: - MAY appear in a DID Document - MUST NOT influence
+    update authorization or determine DID validity</p>
+    <h3 id="proof-object-schema">6.2 Proof Object Schema</h3>
+    <p>A DataIntegrityProof appears as follows:</p>
+    <pre><code>&quot;proof&quot;: {
+  &quot;type&quot;: &quot;DataIntegrityProof&quot;,
+  &quot;cryptosuite&quot;: &quot;es256-jws-cid-2025&quot;,
+  &quot;proofPurpose&quot;: &quot;assertionMethod&quot;,
+  &quot;verificationMethod&quot;: &quot;#p256&quot;,
+  &quot;created&quot;: &quot;&lt;ISO8601Z&gt;&quot;,
+  &quot;jws&quot;: &quot;&lt;compact-jws-with-currentCore-as-payload&gt;&quot;
+}</code></pre>
+    <p>The proof MUST:</p>
+    <ul>
+    <li>sign the UTF-8 byte sequence of the currentCore CID string</li>
+    <li>NOT sign or canonicalize any other part of the DID Document</li>
+    <li>use a verificationMethod listed in assertionMethod</li>
+    </ul>
+    <h3 id="cryptosuite-es256-jws-cid-2025">6.3 Cryptosuite:
+    es256-jws-cid-2025</h3>
+    <p>The cryptosuite identifier:</p>
+    <pre><code>&quot;cryptosuite&quot;: &quot;es256-jws-cid-2025&quot;</code></pre>
+    <p>The es256-jws-cid-2025 suite defines a compact ES256 JWS
+    signature over the currentCore CID string.</p>
+    <p><strong>Components</strong>:</p>
+    <ul>
+    <li><strong>Signature type</strong>: ECDSA secp256r1 (P-256)</li>
+    <li><strong>Representation</strong>: compact JWS
+    (header.payload.signature)</li>
+    <li><strong>Protected header</strong>: The protected header MUST
+    contain exactly the single member {“alg”:“ES256”}.</li>
+    <li><strong>Payload</strong>: the UTF-8 byte sequence of the
+    currentCore CID string</li>
+    <li><strong>Signing input</strong>: BASE64URL(header) + “.” +
+    BASE64URL(payload)</li>
+    <li><strong>Signature format</strong>: ASN.1 DER-encoded ECDSA (r
+    and s integers)</li>
+    </ul>
+    <p><strong>Verification Steps</strong>: 1. Parse the compact JWS
+    into header, payload, signature. 2. Confirm header.alg === “ES256”.
+    3. Decode payload and confirm it equals currentCore. 4. Recompute
+    signingInput. 5. Verify ECDSA P-256 over SHA-256(signingInput) using
+    the referenced P-256 key.</p>
+    <p>This proof MUST NOT be used to authorize DID updates.</p>
+    <h3 id="ecdsa-s-value-canonicality">6.4 ECDSA S-Value
+    Canonicality</h3>
+    <p>ES256 signatures MAY use either the “low-S” or “high-S” form.
+    Both are cryptographically valid and MUST be accepted.</p>
+    <p>Implementations: - MAY normalize to low-S (s ≤ n/2) - MUST NOT
+    reject high-S signatures - MAY apply normalization internally (s :=
+    min(s, n − s))</p>
+    <p>This rule ensures full interoperability across platforms such as
+    Secure Enclave, WebCrypto, and noble-curves.</p>
+    <h3 id="interoperability-and-usage-notes">6.5 Interoperability and
+    Usage Notes</h3>
+    <ul>
+    <li>DI proofs are optional metadata and do not affect DID validity
+    or update logic.</li>
+    <li>Resolvers MUST ignore DI proofs when determining the
+    authoritative core chain.</li>
+    <li>Relying parties MAY use DI proofs for assurance or
+    trust-framework requirements.</li>
+    <li>DI proofs MAY be safely added, omitted, or mirrored without
+    affecting core state.</li>
+    <li>The suite is designed to interoperate cleanly with EUDI Wallets,
+    OpenID4VCI/VP, and ZK-proof circuits.</li>
+    </ul>
+    <hr />
+    <h2 id="signatures-and-attestations">7. Signatures and
+    Attestations</h2>
+    <h3 id="core-signature">7.1 Core Signature</h3>
+    <p>Each core snapshot MUST be signed by the DID controller using one
+    of the verification methods listed in:</p>
+    <pre><code>updatePolicy.allowedVerificationMethods</code></pre>
+    <p>The signature covers the <strong>raw canonical DAG-CBOR
+    bytes</strong> of the core object.</p>
+    <p>These signatures are the authoritative root of trust for did:me
+    and determine: - whether an update is valid - whether rollback,
+    replay, or fork attempts are rejected - whether the currentCore CID
+    matches its signed content</p>
+    <p>Core signatures appear in:</p>
+    <pre><code>&quot;attestations&quot;: [
+  {
+    &quot;alg&quot;: &quot;ML-DSA-87&quot;,
+    &quot;vm&quot;: &quot;#mldsa87-root&quot;,
+    &quot;sig&quot;: &quot;&lt;base64url(signature-over-core-cbor)&gt;&quot;
+  }
+]</code></pre>
+    <p>Multiple signatures MAY be present (e.g., Ed25519 and ML-DSA-87)
+    to support multi-suite cryptography.</p>
+    <h3 id="additional-signatures">7.2 Additional Signatures</h3>
+    <p>A DID Document MAY include an optional W3C DataIntegrityProof
+    using ES256 (P-256). This proof is not authoritative for update
+    validation. See Section 6 for the full definition of the
+    DataIntegrityProof and the es256-jws-cid-2025 cryptosuite.</p>
+    <hr />
+    <h2 id="operations">8. Operations</h2>
+    <h3 id="create">8.1 Create</h3>
+    <p>A new did:me identifier starts with:</p>
+    <pre><code>sequence = 1
+prev = null</code></pre>
+    <p>Creation steps:</p>
+    <ol type="1">
+    <li>Construct the initial core object</li>
+    <li>Encode the core using canonical DAG-CBOR</li>
+    <li>Compute currentCore as CIDv1 (dag-cbor, sha2-256)</li>
+    <li>Sign the core bytes using an allowed verification method</li>
+    <li>Publish the resulting DID Document at the registry endpoint</li>
+    </ol>
+    <h3 id="update">8.2 Update</h3>
+    <p>To update a DID, the registry MUST enforce all of the
+    following:</p>
+    <pre><code>new.id == old.id
+new.sequence == old.sequence + 1
+new.prev == old.currentCore
+signature(new-core-cbor) verifies under new.updatePolicy.allowedVerificationMethods</code></pre>
+    <p>If any check fails, the update MUST be rejected.</p>
+    <p>A successful update produces: - a new core snapshot - a new
+    currentCore CID - an appended entry in keyHistory - an updated DID
+    Document projection</p>
+    <h4 id="multiple-controllers">8.2.1 Multiple Controllers</h4>
+    <p>A did:me DID MAY list one or more controllers.</p>
+    <p>An update is valid if and only if its signature verifies under a
+    verification method that:</p>
+    <ol type="1">
+    <li>is listed in updatePolicy.allowedVerificationMethods, and</li>
+    <li>belongs to at least one controller.</li>
+    </ol>
+    <p>Any single such verification method is sufficient.</p>
+    <h3 id="deactivate">8.3 Deactivate</h3>
+    <p>To deactivate: - Publish a DID Document with completely empty
+    verification relationships (e.g., empty verificationMethod,
+    authentication, assertionMethod, and capabilityInvocation arrays). -
+    Include a valid core signature from the controller or authorized
+    recovery key.</p>
+    <p>After deactivation: - The resolver returns 404 Not Found for the
+    DID. - A stored deactivated DID Document MAY still be published in a
+    separate archival namespace for audit or compliance, but does not
+    participate in resolution.</p>
+    <hr />
+    <h2 id="did-document-projection">9. DID Document Projection</h2>
+    <p>The DID Document is a JSON projection derived from the signed
+    core. Validation MUST be performed against the core and its
+    signatures, not the DID Document.</p>
+    <h3 id="field-mapping-from-core">9.1 Field Mapping from Core</h3>
+    <p>The following DID Document fields MUST be derived directly from
+    the core: - <code>id</code> → core.id - <code>controller</code> →
+    core.controller - <code>sequence</code> → core.sequence -
+    <code>prev</code> → core.prev - <code>currentCore</code> → CID of
+    the canonical DAG-CBOR core snapshot -
+    <code>verificationMethod</code> → derived from core.controllerKeys -
+    <code>authentication</code> → derived from core.authenticationKeys -
+    <code>assertionMethod</code> → derived from core.assertionKeys -
+    <code>updatePolicy</code> → core.updatePolicy -
+    <code>capabilityInvocation</code> → derived from the appropriate
+    core keys - <code>keyAgreement</code> → derived from
+    core.keyAgreementKeys - <code>service</code> → derived from
+    core.services - <code>keyHistory</code> → ordered list of prior core
+    CIDs</p>
+    <p>These fields MUST reflect the core exactly, and MUST NOT
+    introduce information not present in the core snapshot.</p>
+    <h3 id="method-specific-extensions-non-core-metadata">9.2
+    Method-Specific Extensions (Non-Core Metadata)</h3>
+    <p>The DID Document MAY include additional non-authoritative
+    metadata that does not affect the core state: -
+    <code>attestations</code> — signatures over the core object -
+    <code>proof</code> — optional Data Integrity Proof (P-256) over
+    currentCore - <code>domainVerification</code> — optional DNS/HTTP
+    domain-binding proof - any other optional terms defined in the
+    JSON-LD context at: https://me-id.org/ns/did-me/v1</p>
+    <p>Processors that do not recognize these fields MUST ignore them,
+    per DID Core rules.</p>
+    <h4 id="domain-verification-objects">9.3 Domain Verification
+    Objects</h4>
+    <p>Each optional domainVerification entry MUST include:</p>
+    <ul>
+    <li><strong>type</strong> (string) — the verification object type
+    (“DnsTxtVerification” or “HttpsWellKnownVerification”)</li>
+    <li><strong>domain</strong> (string)</li>
+    <li><strong>method</strong> (string)</li>
+    <li><strong>proof</strong> or <strong>proofUrl</strong> (depending
+    on method)</li>
+    <li><strong>verifiedAt</strong> (timestamp)</li>
+    </ul>
+    <p>Resolvers MUST accept at least one valid domain-verification
+    method. Support for both is RECOMMENDED.</p>
+    <h3 id="requirements">9.4 Requirements</h3>
+    <ul>
+    <li>Reconstructing DID state MUST be possible using only the core
+    snapshot and its signatures.</li>
+    <li>The DID Document MUST NOT override or conflict with the contents
+    of the signed core.</li>
+    <li>Optional fields MUST NOT influence update authorization or core
+    validity.</li>
+    <li>The resolver MUST treat any mismatch between the core and
+    projection as an error.</li>
+    </ul>
+    <hr />
+    <h2 id="json-ld-context">10. JSON-LD Context</h2>
+    <p><code>did:me JSON-LD</code> context provide optional metadata
+    extensions. Implementations MUST ignore any unrecognized terms,
+    consistent with DID Core processing rules.</p>
+    <p>The did:me JSON-LD context is published at
+    https://me-id.org/ns/did-me/v1.</p>
+    <p>This context defines: - method-specific terms (sequence, prev,
+    currentCore, keyHistory) - metadata terms (updatePolicy,
+    attestations, domainVerification) - service types (e.g.,
+    ReallyMeDirectoryService) - optional device- or persona-related
+    extensions (e.g., hardwareBound, biometricProtected,
+    deviceModel)</p>
+    <p>All terms defined in the context: - MAY appear in DID Documents -
+    MUST NOT influence the authoritative core state unless explicitly
+    part of the core schema - MUST be ignored by processors that do not
+    understand them, per DID Core rules</p>
+    <p>The JSON-LD context MUST be included in all did:me DID Documents
+    to guarantee consistent interpretation of method-specific terms.</p>
+    <h4 id="alsoknownas-optional-correlation-identifiers">10.1
+    alsoKnownAs (Optional Correlation Identifiers)</h4>
+    <p><code>alsoKnownAs</code> is an optional DID Core property that
+    MAY appear in a did:me DID Document. It provides human-readable or
+    system-assigned alternate identifiers, such as short profile URLs,
+    usernames, handles, or legacy identifiers. These values: • do not
+    participate in update authorization • do not affect core validity •
+    do not alter the canonical core snapshot • MAY be ignored by
+    resolvers or relying parties</p>
+    <pre><code>
+  &quot;alsoKnownAs&quot;: [
+  &quot;https://domain/&lt;short-id&gt;&quot;
+]</code></pre>
+    <p>alsoKnownAs is strictly non-authoritative metadata and serves
+    only as an optional correlation convenience.</p>
+    <h4 id="hardware-bound-and-biometric-protected">10.2 Hardware Bound
+    and Biometric Protected</h4>
+    <p><code>hardwareBound</code> and <code>biometricProtected</code>
+    are optional metadata fields that describe protection
+    characteristics of the controller’s authentication environment.
+    These fields are not authoritative, do not affect core state, and
+    MAY be ignored by relying parties.</p>
+    <h4 id="user-verification-method">10.3 User Verification Method</h4>
+    <p><code>userVerificationMethod</code> is optional metadata
+    describing how a user authenticates locally (face, fingerprint, pin,
+    passcode, password, iris, voice, pattern, none). This field is
+    non-authoritative and MUST NOT influence the validity of a core
+    snapshot.</p>
+    <h4 id="device-and-model">10.4 Device and Model</h4>
+    <p><code>deviceModel</code> is optional metadata identifying the
+    user’s device model or hardware platform. It is purely informational
+    and does not affect DID state.</p>
+    <hr />
+    <h2 id="security-considerations">11. Security Considerations</h2>
+    <ul>
+    <li><strong>Rollback protection</strong>: enforced through monotonic
+    sequence values</li>
+    <li><strong>Fork prevention</strong>: enforced through prev linking
+    the previous core snapshot</li>
+    <li><strong>Tamper-evidence</strong>: achieved via CIDv1 (SHA-256,
+    DAG-CBOR) and core signatures</li>
+    <li><strong>Authorized updates</strong>: restricted to verification
+    methods listed in updatePolicy</li>
+    <li><strong>Canonical encoding</strong>: core signatures MUST cover
+    the canonical DAG-CBOR bytes</li>
+    <li><strong>Projection safety</strong>: DID Documents are
+    non-authoritative projections; validators must rely on core +
+    signatures</li>
+    <li><strong>Key rotation</strong>: does not change the DID; state
+    changes only via new core snapshots</li>
+    <li><strong>Backup practices</strong>: operators SHOULD maintain
+    redundant storage of core snapshots and DID Documents</li>
+    <li><strong>Cryptographic agility</strong>: coexistence of classical
+    (Ed25519, ES256) and post-quantum (ML-DSA-87, ML-KEM-1024) suites
+    ensures long-term security</li>
+    <li><strong>ECDSA S-Value Forms</strong>: ES256 signatures may use
+    either low-S or high-S encoding. Both forms are secure and
+    mathematically equivalent. Verifiers MUST accept both and MAY
+    normalize signatures to low-S form internally for canonicality.</li>
+    </ul>
+    <hr />
+    <h2 id="decentralization-and-federation">12. Decentralization and
+    Federation</h2>
+    <p>did:me identifiers are fundamentally self-hosted and do not rely
+    on any central registry. Optional public directories may mirror
+    published DID Documents for discovery. The method’s structure
+    supports decentralized and federated deployments without breaking
+    existing identifiers.</p>
+    <p>The method supports: - <strong>Multi-directory
+    federation</strong> – multiple independent operators may host
+    equivalent projections of the same DID state for discovery. -
+    <strong>Verifiable replay</strong> – any resolver can reconstruct
+    canonical DID state by validating the chain of signed core
+    snapshots. - <strong>Independent resolution</strong> – resolvers do
+    not need to trust any directory, host, or service; all validation
+    derives from the signed core chain.</p>
+    <p>This is enabled by: - <code>sequence</code> – enforces strict
+    update ordering<br />
+    - <code>prev</code> – links each core snapshot to the previous
+    CID<br />
+    - <code>currentCore</code> – cryptographic addressing of core
+    snapshots<br />
+    - signed canonical cores – guarantee tamper-evident integrity</p>
+    <p>These features allow did:me to evolve toward decentralized,
+    distributed, or mirrored resolution models in the future.</p>
+  </main>
+
+</div>
+
+<script>
+  // Mobile toggle
+  const btn = document.getElementById('menuButton');
+  const sidebar = document.getElementById('sidebar');
+  btn.addEventListener('click', () => {
+    sidebar.classList.toggle('open');
+  });
+</script>
+
+</body>
+</html>
