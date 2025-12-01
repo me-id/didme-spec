@@ -303,6 +303,18 @@ pre code { white-space: pre-wrap; }
     Federation</a></li>
     <li><a href="#correct-didme-order" id="toc-correct-didme-order">13.
     Correct did:me order</a></li>
+    <li><a href="#field-requirements-matrix-didme-v1" id="toc-field-requirements-matrix-didme-v1">14. Field Requirements
+    Matrix (did:me v1)</a>
+    <ul>
+    <li><a href="#did-document-field-matrix" id="toc-did-document-field-matrix">14.1 DID Document Field
+    Matrix</a></li>
+    <li><a href="#null-vs-omission-rules-summary" id="toc-null-vs-omission-rules-summary">14.2 Null vs Omission Rules
+    Summary</a></li>
+    <li><a href="#required-arrays-non-null" id="toc-required-arrays-non-null">14.3 Required Arrays
+    (non-null)</a></li>
+    <li><a href="#optional-arrays" id="toc-optional-arrays">14.4
+    Optional Arrays</a></li>
+    </ul></li>
     </ul></li>
     </ul>
   </nav>
@@ -794,8 +806,9 @@ signature(new-core-cbor) verifies under new.updatePolicy.allowedVerificationMeth
     <code>capabilityInvocation</code> → derived from the appropriate
     core keys - <code>keyAgreement</code> → derived from
     core.keyAgreementKeys - <code>service</code> → derived from
-    core.services - <code>keyHistory</code> → ordered list of prior core
-    CIDs</p>
+    core.services. If the core has no services, the service property
+    MUST be omitted from the DID Document. - <code>keyHistory</code> →
+    ordered list of prior core CIDs</p>
     <p>These fields MUST reflect the core exactly, and MUST NOT
     introduce information not present in the core snapshot.</p>
     <h3 id="method-specific-extensions-non-core-metadata">9.2
@@ -962,10 +975,254 @@ assertionMethod
 capabilityInvocation
 keyAgreement
 
-service
+service(s)
 updatePolicy
 attestations
 proof</code></pre>
+    <h2 id="field-requirements-matrix-didme-v1">14. Field Requirements
+    Matrix (did:me v1)</h2>
+    <p>This table defines for every DID Document field:</p>
+    <ul>
+    <li><strong>Required?</strong>: MUST appear for a valid did:me DID
+    Document<br />
+    </li>
+    <li><strong>Nullable?</strong>: Whether the field may be
+    <code>null</code><br />
+    </li>
+    <li><strong>Emit When Empty?</strong>: Whether to include the JSON
+    key when the value is empty<br />
+    </li>
+    <li><strong>Notes</strong>: Method-specific behavior</li>
+    </ul>
+    <h3 id="did-document-field-matrix">14.1 DID Document Field
+    Matrix</h3>
+    <table>
+    <colgroup>
+    <col style="width: 12%" />
+    <col style="width: 20%" />
+    <col style="width: 20%" />
+    <col style="width: 34%" />
+    <col style="width: 12%" />
+    </colgroup>
+    <thead>
+    <tr>
+    <th>Field</th>
+    <th>Required</th>
+    <th>Nullable</th>
+    <th>Emit When Empty</th>
+    <th>Notes</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+    <td><span class="citation" data-cites="context">@context</span></td>
+    <td>Yes</td>
+    <td>No</td>
+    <td>N/A</td>
+    <td>MUST exactly match did:me’s 4-entry context array, in
+    order.</td>
+    </tr>
+    <tr>
+    <td>id</td>
+    <td>Yes</td>
+    <td>No</td>
+    <td>N/A</td>
+    <td>MUST be a valid <code>did:me:</code> identifier.</td>
+    </tr>
+    <tr>
+    <td>controller</td>
+    <td>Yes</td>
+    <td>No</td>
+    <td>N/A</td>
+    <td>MUST equal <code>id</code>.</td>
+    </tr>
+    <tr>
+    <td>alsoKnownAs</td>
+    <td>No</td>
+    <td>No</td>
+    <td>Omit if empty</td>
+    <td>Optional. MUST be an array when present.</td>
+    </tr>
+    <tr>
+    <td>sequence</td>
+    <td>Yes</td>
+    <td>No</td>
+    <td>N/A</td>
+    <td>MUST equal <code>keyHistory.count + 1</code>.</td>
+    </tr>
+    <tr>
+    <td>prev</td>
+    <td>Conditional</td>
+    <td>Yes</td>
+    <td>Omit if null</td>
+    <td>Omit/null when sequence=1; otherwise MUST equal last keyHistory
+    entry.</td>
+    </tr>
+    <tr>
+    <td>hardwareBound</td>
+    <td>No</td>
+    <td>Yes</td>
+    <td>Omit if null/false</td>
+    <td>Optional metadata. False treated as absent.</td>
+    </tr>
+    <tr>
+    <td>biometricProtected</td>
+    <td>No</td>
+    <td>Yes</td>
+    <td>Omit if null/false</td>
+    <td>Optional metadata. False treated as absent.</td>
+    </tr>
+    <tr>
+    <td>userVerificationMethod</td>
+    <td>No</td>
+    <td>Yes</td>
+    <td>Omit if null</td>
+    <td>Optional (“face”, “pin”, etc.).</td>
+    </tr>
+    <tr>
+    <td>deviceModel</td>
+    <td>No</td>
+    <td>Yes</td>
+    <td>Omit if null/empty</td>
+    <td>Optional metadata.</td>
+    </tr>
+    <tr>
+    <td>coreCbor</td>
+    <td>Yes</td>
+    <td>No</td>
+    <td>N/A</td>
+    <td>Base64url-encoded canonical DAG-CBOR.</td>
+    </tr>
+    <tr>
+    <td>currentCore</td>
+    <td>Yes</td>
+    <td>No</td>
+    <td>N/A</td>
+    <td>MUST be CIDv1 of the core snapshot.</td>
+    </tr>
+    <tr>
+    <td>keyHistory</td>
+    <td>Yes</td>
+    <td>No</td>
+    <td><strong>Emit empty array</strong></td>
+    <td>MUST contain only past CIDs; MUST NOT include currentCore.</td>
+    </tr>
+    <tr>
+    <td>verificationMethod</td>
+    <td>Yes</td>
+    <td>No</td>
+    <td>N/A</td>
+    <td>MUST contain all required key types.</td>
+    </tr>
+    <tr>
+    <td>authentication</td>
+    <td>Yes</td>
+    <td>No</td>
+    <td>N/A</td>
+    <td>MUST contain at least <code>#ed25519</code> and
+    <code>#mldsa87-auth</code>.</td>
+    </tr>
+    <tr>
+    <td>assertionMethod</td>
+    <td>Yes</td>
+    <td>No</td>
+    <td>N/A</td>
+    <td>MUST include <code>#p256</code>.</td>
+    </tr>
+    <tr>
+    <td>capabilityInvocation</td>
+    <td>Yes</td>
+    <td>No</td>
+    <td>N/A</td>
+    <td>MUST include <code>#mldsa87-root</code>.</td>
+    </tr>
+    <tr>
+    <td>keyAgreement</td>
+    <td>Yes</td>
+    <td>No</td>
+    <td>N/A</td>
+    <td>MUST include <code>#x25519</code> and
+    <code>#mlkem1024</code>.</td>
+    </tr>
+    <tr>
+    <td>service</td>
+    <td>No</td>
+    <td>No</td>
+    <td>Omit if empty</td>
+    <td>Include only when one or more services exist.</td>
+    </tr>
+    <tr>
+    <td>updatePolicy</td>
+    <td>Yes</td>
+    <td>No</td>
+    <td>N/A</td>
+    <td>MUST include allowedVerificationMethods containing
+    <code>#mldsa87-root</code>.</td>
+    </tr>
+    <tr>
+    <td>attestations</td>
+    <td>Yes</td>
+    <td>No</td>
+    <td>N/A</td>
+    <td>MUST have ≥1 ML-DSA-87 core signature.</td>
+    </tr>
+    <tr>
+    <td>proof</td>
+    <td>Yes (your method choice)</td>
+    <td>No</td>
+    <td>N/A</td>
+    <td>Always present in your implementation.</td>
+    </tr>
+    <tr>
+    <td>domainVerification</td>
+    <td>No</td>
+    <td>No</td>
+    <td>Omit if empty</td>
+    <td>Optional DNS/HTTP domain-binding proofs.</td>
+    </tr>
+    </tbody>
+    </table>
+    <h3 id="null-vs-omission-rules-summary">14.2 Null vs Omission Rules
+    Summary</h3>
+    <p>NEVER emit explicit <code>null</code> in the JSON DID
+    Document.</p>
+    <ul>
+    <li>Optional fields MUST be omitted entirely when not present.</li>
+    <li>Arrays MUST either contain values or be omitted (except
+    <code>keyHistory</code>, which MUST be an empty array when no
+    entries exist).</li>
+    <li>Optional booleans (<code>hardwareBound</code>,
+    <code>biometricProtected</code>) SHOULD be omitted when false unless
+    explicitly set.</li>
+    </ul>
+    <h3 id="required-arrays-non-null">14.3 Required Arrays
+    (non-null)</h3>
+    <p>These MUST always be present in the JSON and MUST NOT be
+    null:</p>
+    <ul>
+    <li>verificationMethod<br />
+    </li>
+    <li>authentication<br />
+    </li>
+    <li>assertionMethod<br />
+    </li>
+    <li>capabilityInvocation<br />
+    </li>
+    <li>keyAgreement<br />
+    </li>
+    <li>attestations<br />
+    </li>
+    <li>keyHistory (may be empty but MUST be present)</li>
+    </ul>
+    <h3 id="optional-arrays">14.4 Optional Arrays</h3>
+    <p>These MAY be omitted entirely:</p>
+    <ul>
+    <li>alsoKnownAs<br />
+    </li>
+    <li>service<br />
+    </li>
+    <li>domainVerification</li>
+    </ul>
   </main>
 
 </div>

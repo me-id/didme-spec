@@ -568,7 +568,7 @@ The following DID Document fields MUST be derived directly from the core:
 - `updatePolicy` → core.updatePolicy
 - `capabilityInvocation` → derived from the appropriate core keys
 - `keyAgreement` → derived from core.keyAgreementKeys
-- `service` → derived from core.services
+- `service` → derived from core.services. If the core has no services, the service property MUST be omitted from the DID Document.
 - `keyHistory` → ordered list of prior core CIDs
 
 These fields MUST reflect the core exactly, and MUST NOT introduce information not present in the core snapshot.
@@ -719,3 +719,68 @@ updatePolicy
 attestations
 proof
 ~~~
+
+## 14. Field Requirements Matrix (did:me v1)
+
+This table defines for every DID Document field:
+
+- **Required?**: MUST appear for a valid did:me DID Document  
+- **Nullable?**: Whether the field may be `null`  
+- **Emit When Empty?**: Whether to include the JSON key when the value is empty  
+- **Notes**: Method-specific behavior
+
+### 14.1 DID Document Field Matrix
+
+Field | Required | Nullable | Emit When Empty | Notes
+------|----------|----------|-----------------|------
+@context | Yes | No | N/A | MUST exactly match did:me’s 4-entry context array, in order.
+id | Yes | No | N/A | MUST be a valid `did:me:` identifier.
+controller | Yes | No | N/A | MUST equal `id`.
+alsoKnownAs | No | No | Omit if empty | Optional. MUST be an array when present.
+sequence | Yes | No | N/A | MUST equal `keyHistory.count + 1`.
+prev | Conditional | Yes | Omit if null | Omit/null when sequence=1; otherwise MUST equal last keyHistory entry.
+hardwareBound | No | Yes | Omit if null/false | Optional metadata. False treated as absent.
+biometricProtected | No | Yes | Omit if null/false | Optional metadata. False treated as absent.
+userVerificationMethod | No | Yes | Omit if null | Optional (“face”, “pin”, etc.).
+deviceModel | No | Yes | Omit if null/empty | Optional metadata.
+coreCbor | Yes | No | N/A | Base64url-encoded canonical DAG-CBOR.
+currentCore | Yes | No | N/A | MUST be CIDv1 of the core snapshot.
+keyHistory | Yes | No | **Emit empty array** | MUST contain only past CIDs; MUST NOT include currentCore.
+verificationMethod | Yes | No | N/A | MUST contain all required key types.
+authentication | Yes | No | N/A | MUST contain at least `#ed25519` and `#mldsa87-auth`.
+assertionMethod | Yes | No | N/A | MUST include `#p256`.
+capabilityInvocation | Yes | No | N/A | MUST include `#mldsa87-root`.
+keyAgreement | Yes | No | N/A | MUST include `#x25519` and `#mlkem1024`.
+service | No | No | Omit if empty | Include only when one or more services exist.
+updatePolicy | Yes | No | N/A | MUST include allowedVerificationMethods containing `#mldsa87-root`.
+attestations | Yes | No | N/A | MUST have ≥1 ML-DSA-87 core signature.
+proof | Yes (your method choice) | No | N/A | Always present in your implementation.
+domainVerification | No | No | Omit if empty | Optional DNS/HTTP domain-binding proofs.
+
+### 14.2 Null vs Omission Rules Summary
+
+NEVER emit explicit `null` in the JSON DID Document.
+
+- Optional fields MUST be omitted entirely when not present.
+- Arrays MUST either contain values or be omitted (except `keyHistory`, which MUST be an empty array when no entries exist).
+- Optional booleans (`hardwareBound`, `biometricProtected`) SHOULD be omitted when false unless explicitly set.
+
+### 14.3 Required Arrays (non-null)
+
+These MUST always be present in the JSON and MUST NOT be null:
+
+- verificationMethod  
+- authentication  
+- assertionMethod  
+- capabilityInvocation  
+- keyAgreement  
+- attestations  
+- keyHistory (may be empty but MUST be present)
+
+### 14.4 Optional Arrays
+
+These MAY be omitted entirely:
+
+- alsoKnownAs  
+- service  
+- domainVerification
