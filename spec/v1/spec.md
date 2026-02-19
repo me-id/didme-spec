@@ -121,7 +121,7 @@ A `did:me` DID Document is a standard DID Document projected from a signed core 
   - `updatePolicy` — rules defining which verification methods may authorize updates  
   - `attestations` — signatures over the core object by the DID controller  
   - `proof` — optional Data Integrity Proof over `currentCore`  
-  - `domainVerification` — optional DNS/HTTP proof binding the DID to a domain  
+  - `domainVerification` — optional DNS/HTTP binding the DID to a domain  
 
 ### 4.1 Method-Specific Extension Properties
 
@@ -144,6 +144,23 @@ All method-specific terms:
 - MUST NOT change the canonical core object unless explicitly listed in the core schema
 
 These extensions allow did:me to support richer metadata while preserving DID Core compatibility and forward extensibility.
+
+
+### 4.2 Encoding Preferences
+
+Did:me should use base64url encoding for keys.  
+
+### 4.3 Protocol buffers
+
+Due to the size of post-quantum keys, did:me documents MAY use Protocol Buffers as an optional (and preferred) transport/storage encoding.
+
+The canonical authoritative state is always the signed canonical DAG-CBOR core:
+- CID derivation MUST be performed from canonical DAG-CBOR core bytes
+- authoritative signature verification MUST be performed over canonical DAG-CBOR core bytes
+
+The DID Document JSON is a projection output derived from the core.
+Protocol Buffers bytes MUST NOT be used for CID derivation or authoritative signature verification.
+
 
 ---
 
@@ -195,7 +212,6 @@ Core = {
   keyAgreementKeys: [string],
   services: [CoreService],          // service endpoints
   updatePolicy: CoreUpdatePolicy,   // defines which verification methods may authorize updates
-  updatedAt: RFC3339 timestamp
 }
 ~~~
 This schema represents exactly the content protected by the signature.
@@ -223,6 +239,7 @@ Keys listed here define:
 -	which methods serve authentication, assertion, invocation, or key agreement
 
 All key relationship references (authenticationKeys, assertionKeys, keyAgreementKeys, and allowedVerificationMethods in updatePolicy) MUST refer to a CoreKey.id present in controllerKeys.
+Section 14 defines a stricter, normative default profile for public did:me v1 interoperability; those profile requirements may constrain this base model further.
 
 ### 5.4 CoreUpdatePolicy 
 
@@ -384,7 +401,7 @@ DI proofs:
 
 ###   6.2 Proof Object Schema
 
-A DataIntegrityProof appears as follows:
+A did:me DataIntegrityProof using the `es256-jws-cid-2025` cryptosuite appears as follows:
 
 ~~~
 "proof": {
@@ -396,6 +413,10 @@ A DataIntegrityProof appears as follows:
   "jws": "<compact-jws-with-currentCore-as-payload>"
 }
 ~~~
+
+`es256-jws-cid-2025` is a did:me-defined custom Data Integrity cryptosuite profile.
+Implementations MUST apply the verification algorithm defined in this specification
+for this cryptosuite value.
 
 The proof MUST:
 
@@ -412,6 +433,7 @@ The cryptosuite identifier:
 ~~~
 
 The es256-jws-cid-2025 suite defines a compact ES256 JWS signature over the currentCore CID string.
+This cryptosuite is a did:me custom profile and is not required to be supported by generic Data Integrity processors unless they implement this suite definition.
 
 **Components**:
 
@@ -420,7 +442,7 @@ The es256-jws-cid-2025 suite defines a compact ES256 JWS signature over the curr
 - **Protected header**: The protected header MUST contain exactly the single member {"alg":"ES256"}.
 -	**Payload**: the UTF-8 byte sequence of the currentCore CID string
 - **Signing input**: BASE64URL(header) + "." + BASE64URL(payload)
-- **Signature format**: ASN.1 DER-encoded ECDSA (r and s integers)
+- **Signature format**: JWS ES256 signature bytes in fixed-length `R || S` form (64 bytes total, base64url-encoded in the JWS signature segment)
 
 **Verification Steps**: 
   1.	Parse the compact JWS into header, payload, signature.
@@ -430,6 +452,7 @@ The es256-jws-cid-2025 suite defines a compact ES256 JWS signature over the curr
 	5.	Verify ECDSA P-256 over SHA-256(signingInput) using the referenced P-256 key.
 
 This proof MUST NOT be used to authorize DID updates.
+If a verifier does not support `es256-jws-cid-2025`, it MUST treat this proof as unsupported and MUST NOT treat it as valid.
 
 ###   6.4 ECDSA S-Value Canonicality 
 
@@ -481,6 +504,7 @@ Core signatures appear in:
 ]
 ~~~
 Multiple signatures MAY be present (e.g., Ed25519 and ML-DSA-87) to support multi-suite cryptography.
+For `attestations.sig`, implementations MUST use base64url-encoded signature bytes.
 
 ### 7.2 Additional Signatures
 
@@ -562,6 +586,7 @@ The following DID Document fields MUST be derived directly from the core:
 - `sequence` → core.sequence
 - `prev` → core.prev
 - `currentCore` → CID of the canonical DAG-CBOR core snapshot
+- `coreCbor` → base64url-encoded canonical DAG-CBOR bytes of the current core snapshot
 - `verificationMethod` → derived from core.controllerKeys
 - `authentication` → derived from core.authenticationKeys
 - `assertionMethod` → derived from core.assertionKeys
@@ -578,11 +603,13 @@ These fields MUST reflect the core exactly, and MUST NOT introduce information n
 The DID Document MAY include additional non-authoritative metadata that does not affect the core state:
 - `attestations` — signatures over the core object
 - `proof` — optional Data Integrity Proof (P-256) over currentCore
-- `domainVerification` — optional DNS/HTTP domain-binding proof
+- `domainVerification` — optional DNS/HTTP domain-binding
 - any other optional terms defined in the JSON-LD context at:
 https://me-id.org/ns/did-me/v1
 
 Processors that do not recognize these fields MUST ignore them, per DID Core rules.
+When projecting from core to DID Document JSON, `prev` MUST be omitted when `core.prev` is null (genesis state) and MUST be present as a non-null CID value when `sequence > 1`.
+`proof` remains optional metadata in v1; however, profiles that require ZK anchoring SHOULD include it.
 
 #### 9.3 Domain Verification Objects
 
@@ -592,8 +619,7 @@ Each optional domainVerification entry MUST include:
 ("DnsTxtVerification" or "HttpsWellKnownVerification")
 - **domain** (string)
 - **method** (string)
-- **proof** or **proofUrl** (depending on method)
-- **verifiedAt** (timestamp)
+- **binding** or **proofUrl** (depending on method)
 
 Resolvers MUST accept at least one valid domain-verification method. Support for both is RECOMMENDED.
 
@@ -603,17 +629,19 @@ Resolvers MUST accept at least one valid domain-verification method. Support for
 - The DID Document MUST NOT override or conflict with the contents of the signed core.
 - Optional fields MUST NOT influence update authorization or core validity.
 - The resolver MUST treat any mismatch between the core and projection as an error.
+- If `coreCbor` is present, decoding it MUST produce canonical DAG-CBOR bytes whose CID equals `currentCore`.
+- In the did:me v1 default profile (Section 14), `coreCbor` is required to enable self-contained attestation verification.
 
 ---
 
 ## 10. JSON-LD Context
 
-`did:me JSON-LD` context provide optional metadata extensions. Implementations MUST ignore any unrecognized terms, consistent with DID Core processing rules.
+`did:me JSON-LD` context provides optional metadata extensions. Implementations MUST ignore any unrecognized terms, consistent with DID Core processing rules.
 
 The did:me JSON-LD context is published at https://me-id.org/ns/did-me/v1.
 
 This context defines:
-- method-specific terms (sequence, prev, currentCore, keyHistory)
+- method-specific terms (sequence, prev, currentCore, coreCbor, keyHistory)
 - metadata terms (updatePolicy, attestations, domainVerification)
 - service types (e.g., ReallyMeDirectoryService)
 - optional device- or persona-related extensions (e.g., hardwareBound, biometricProtected, deviceModel)
@@ -624,6 +652,12 @@ All terms defined in the context:
 - MUST be ignored by processors that do not understand them, per DID Core rules
 
 The JSON-LD context MUST be included in all did:me DID Documents to guarantee consistent interpretation of method-specific terms.
+The first three `@context` entries MUST be the canonical did:me context tuple, in this exact order:
+1. `https://www.w3.org/ns/did/v1`
+2. `https://w3id.org/security/multikey/v1`
+3. `https://me-id.org/ns/did-me/v1`
+Additional contexts MAY follow and MUST NOT redefine terms from the canonical tuple.
+Conformance checkers and validators SHOULD reject DID Documents whose additional contexts redefine terms from the canonical tuple.
 
 #### 10.1 alsoKnownAs (Optional Correlation Identifiers)
 
@@ -666,7 +700,7 @@ alsoKnownAs is strictly non-authoritative metadata and serves only as an optiona
 - **Projection safety**: DID Documents are non-authoritative projections; validators must rely on core + signatures
 -	**Key rotation**: does not change the DID; state changes only via new core snapshots
 - **Backup practices**: operators SHOULD maintain redundant storage of core snapshots and DID Documents
-- **Cryptographic agility**: coexistence of classical (Ed25519, ES256) and post-quantum (ML-DSA-87, ML-KEM-1024) suites ensures long-term security
+- **Cryptographic agility**: coexistence of classical (Ed25519, ES256) and post-quantum (ML-DSA-87, ML-KEM-768, ML-KEM-1024) suites ensures long-term security
 - **ECDSA S-Value Forms**: ES256 signatures may use either low-S or high-S encoding. Both forms are secure and mathematically equivalent. Verifiers MUST accept both and MAY normalize signatures to low-S form internally for canonicality.
 
 ---
@@ -688,9 +722,12 @@ This is enabled by:
 
 These features allow did:me to evolve toward decentralized, distributed, or mirrored resolution models in the future.
 
---
+---
 
-## 13. Correct did:me order
+## 13. Illustrative did:me JSON member order (non-normative)
+
+JSON member order is non-normative. Producers MAY emit members in any order,
+and processors MUST NOT rely on JSON key order for validity.
 ~~~
 @context
 id
@@ -720,11 +757,14 @@ attestations
 proof
 ~~~
 
-## 14. Field Requirements Matrix (did:me v1)
+## 14. Default Profile Requirements Matrix (did:me v1)
+
+This section is normative for the did:me v1 default interoperability profile.
+The base method model is defined in Sections 5 through 9; this profile adds stricter required key sets and relationship requirements for public did:me v1 deployments.
 
 This table defines for every DID Document field:
 
-- **Required?**: MUST appear for a valid did:me DID Document  
+- **Required?**: MUST appear for a valid did:me v1 default-profile DID Document  
 - **Nullable?**: Whether the field may be `null`  
 - **Emit When Empty?**: Whether to include the JSON key when the value is empty  
 - **Notes**: Method-specific behavior
@@ -733,29 +773,29 @@ This table defines for every DID Document field:
 
 Field | Required | Nullable | Emit When Empty | Notes
 ------|----------|----------|-----------------|------
-@context | Yes | No | N/A | MUST exactly match did:me’s 4-entry context array, in order.
+@context | Yes | No | N/A | The first 3 entries MUST be, in order: `https://www.w3.org/ns/did/v1`, `https://w3id.org/security/multikey/v1`, `https://me-id.org/ns/did-me/v1`. Additional contexts MAY follow and MUST NOT redefine terms from the canonical tuple.
 id | Yes | No | N/A | MUST be a valid `did:me:` identifier.
-controller | Yes | No | N/A | MUST equal `id`.
+controller | Yes | No | N/A | MUST be either: (a) a `did:me:` string, or (b) a non-empty array of `did:me:` strings.
 alsoKnownAs | No | No | Omit if empty | Optional. MUST be an array when present.
 sequence | Yes | No | N/A | MUST equal `keyHistory.count + 1`.
-prev | Conditional | Yes | Omit if null | Omit/null when sequence=1; otherwise MUST equal last keyHistory entry.
+prev | Conditional | No | Omit when sequence=1 | MUST be omitted when sequence=1; otherwise MUST equal last keyHistory entry.
 hardwareBound | No | Yes | Omit if null/false | Optional metadata. False treated as absent.
 biometricProtected | No | Yes | Omit if null/false | Optional metadata. False treated as absent.
 userVerificationMethod | No | Yes | Omit if null | Optional (“face”, “pin”, etc.).
 deviceModel | No | Yes | Omit if null/empty | Optional metadata.
-coreCbor | Yes | No | N/A | Base64url-encoded canonical DAG-CBOR.
+coreCbor | Yes | No | N/A | Base64url-encoded canonical DAG-CBOR bytes of the current core snapshot; decoded bytes MUST hash to `currentCore`.
 currentCore | Yes | No | N/A | MUST be CIDv1 of the core snapshot.
 keyHistory | Yes | No | **Emit empty array** | MUST contain only past CIDs; MUST NOT include currentCore.
 verificationMethod | Yes | No | N/A | MUST contain all required key types.
 authentication | Yes | No | N/A | MUST contain at least `#ed25519` and `#mldsa87-auth`.
 assertionMethod | Yes | No | N/A | MUST include `#p256`.
 capabilityInvocation | Yes | No | N/A | MUST include `#mldsa87-root`.
-keyAgreement | Yes | No | N/A | MUST include `#x25519` and `#mlkem1024`.
+keyAgreement | Yes | No | N/A | MUST include `#x25519` and at least one of `#mlkem768` or `#mlkem1024`.
 service | No | No | Omit if empty | Include only when one or more services exist.
 updatePolicy | Yes | No | N/A | MUST include allowedVerificationMethods containing `#mldsa87-root`.
 attestations | Yes | No | N/A | MUST have ≥1 ML-DSA-87 core signature.
-proof | Yes (your method choice) | No | N/A | Always present in your implementation.
-domainVerification | No | No | Omit if empty | Optional DNS/HTTP domain-binding proofs.
+proof | No | No | Omit if absent | Optional in v1; strongly recommended for profiles requiring ZK anchoring.
+domainVerification | No | No | Omit if empty | Optional DNS/HTTP domain-bindings.
 
 ### 14.2 Null vs Omission Rules Summary
 
@@ -784,3 +824,173 @@ These MAY be omitted entirely:
 - alsoKnownAs  
 - service  
 - domainVerification
+
+
+~~~
+{
+  "domainVerification": [
+    {
+      "method": "dns",
+      "domain": "example.com",
+      "dns": {
+        "recordName": "_did",
+        "txtValue": "did=me:123..."
+      }
+    }
+  ]
+}
+~~~
+
+or
+
+~~~
+{
+  "domainVerification": [
+    {
+      "method": "wellknown",
+      "domain": "example.com",
+      "wellknown": {
+        "uri": "/.well-known/did-configuration.json",
+        "content": "eyAidHlwZSI6ICJkaWQtY29uZmlnIiB9" 
+      }
+    }
+  ]
+}
+~~~
+
+domainVerification entries are self-asserted claims added by the DID controller.
+Resolvers and relying parties MUST NOT assume these claims are accurate.
+Independent verification MUST be performed by the verifier.
+
+
+
+## DID Document Relationship Definitions
+
+### verificationMethod
+**Definition:**  
+A list of all public keys the DID controls.
+
+**Meaning:**  
+These keys exist and can be referenced by other DID Document sections.  
+This list does *not* define how the keys are used; roles appear below.
+
+**Used for:**  
+- Declaring available keys  
+- Referencing keys in authentication, assertionMethod, etc.  
+- Interoperability with DID Core processors  
+
+
+---
+
+### authentication
+**Definition:**  
+Keys used to prove control of the DID in interactive protocols.
+
+**Used for:**  
+- Logging in  
+- Pairwise authentication  
+- Messaging identity proofs  
+- Presentations that require DID control verification
+
+**Key types:**  
+- Ed25519  
+- ML-DSA-87  
+- P-256  
+(Never X25519 or ML-KEM; they cannot sign.)
+
+---
+
+### assertionMethod
+**Definition:**  
+Keys used to sign statements *made by the DID*, including VCs, public claims, and ZK-friendly proofs.
+
+**Used for:**  
+- Verifiable Credential issuance  
+- Identity claims  
+- Public profile statements  
+- ZK-friendly attestations (P-256)
+
+**Key types:**  
+- Ed25519  
+- ML-DSA-87  
+- P-256  
+(Never X25519 or ML-KEM.)
+
+---
+
+### keyAgreement
+**Definition:**  
+Keys used to derive shared secrets for encrypted channels.
+
+**Used for:**  
+- Secure messaging  
+- Encrypted VC presentation  
+- Session establishment  
+- Hybrid encryption (X25519 + ML-KEM-768 + ML-KEM-1024)
+
+**Key types:**  
+- X25519  
+- ML-KEM-768  
+- ML-KEM-1024  
+(Never Ed25519 or P-256; those are signing keys.)
+
+---
+
+### capabilityInvocation
+**Definition:**  
+Keys authorized to change or update DID state. These are the **root control keys**.
+
+**Used for:**  
+- DID Document updates  
+- Key rotation  
+- Recovery operations  
+- Deactivation
+
+**Key types:**  
+- ML-DSA-87 (recommended primary root)  
+- Ed25519 (optional second root for hybrid AND-control)  
+(Never X25519 or ML-KEM. P-256 should only be used if Secure Enclave must sign updates.)
+
+---
+
+### attestations
+**Definition:**  
+Signatures over the canonical core snapshot (DAG-CBOR) that validate DID state.  
+Used for hybrid AND-security.
+
+**Used for:**  
+- Proving core snapshot authenticity  
+- True hybrid root control (Ed25519 AND ML-DSA-87)  
+- Long-term survivability across cryptographic eras
+
+**Key types:**  
+- Ed25519  
+- ML-DSA-87  
+
+---
+
+### proof
+**Definition:**  
+A *non-authoritative* P-256 Data Integrity Proof for compatibility with ZK systems, Apple Secp256r1 flows, and DI verifiers.
+
+**Used for:**  
+- ZK proof integrations  
+- Apple Secure Enclave-backed identities  
+- EUDI Wallet compatibility  
+- JWS-based verifiers
+
+**Key types:**  
+- P-256 only  
+(Does not control DID updates.)
+
+
+
+
+| DID Type         | Authentication                       | Assertion / Proofs                     | Verification Methods (VM Set)                           | Key Agreement                  | Capability Invocation (Root Control)       | Attestations (Core Update)             |
+|------------------|---------------------------------------|-----------------------------------------|----------------------------------------------------------|---------------------------------|---------------------------------------------|-------------------------------------------|
+| **Core Identity** (private wallet, root identity) | Ed25519 + ML-DSA-87 + P-256 | ML-DSA-87 + Ed25519 + P-256 (ZK-friendly) | Ed25519, ML-DSA-87, P-256, X25519, ML-KEM-768, ML-KEM-1024 | X25519 + ML-KEM-768 and/or ML-KEM-1024 | **ML-DSA-87 AND Ed25519** (dual required) | **Required dual** (ML-DSA + Ed25519) |
+| **Public Profile** (persona; receives ZK proofs) | Ed25519 + P-256 (+ optional ML-DSA-87) | Ed25519 + P-256 (+ optional ML-DSA-87) | Ed25519, ML-DSA-87, P-256, X25519, ML-KEM-768, ML-KEM-1024 | X25519 + ML-KEM-768 and/or ML-KEM-1024 | **ML-DSA-87 only** | Optional (P-256 DI proof recommended) |
+| **Public Profile + Issuer** (VC issuer persona) | Ed25519 + ML-DSA-87 + P-256 | ML-DSA-87 (primary) + Ed25519 + P-256 | Ed25519, ML-DSA-87, P-256, X25519, ML-KEM-768, ML-KEM-1024 | X25519 + ML-KEM-768 and/or ML-KEM-1024 | **ML-DSA-87 AND Ed25519** | Optional dual or PQ-only |
+| **Issuer DID** (Harvard, banks, orgs) | Ed25519 + ML-DSA-87 + P-256 | ML-DSA-87 (primary) + Ed25519 + P-256 | Ed25519, ML-DSA-87, P-256 | Optional | **ML-DSA-87 AND Ed25519** | Optional dual or PQ-only |
+| **Messaging DID** (fast, throwaway, persona-tied) | Ed25519 (+ optional P-256) | None or P-256 if ZK required | Ed25519, P-256, X25519, ML-KEM-768, ML-KEM-1024 | X25519 + ML-KEM-768 and/or ML-KEM-1024 | Ed25519 | None |
+| **Payment / Wallet DID** (optional specialization) | secp256k1 + optional P-256 | Optional | secp256k1, P-256 | Rare | secp256k1 | Optional |

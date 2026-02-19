@@ -6,6 +6,7 @@
 
     "id": "@id",
     "type": "@type",
+    "xsd": "https://www.w3.org/2001/XMLSchema#",
 
     "alsoKnownAs": {
       "@id": "https://www.w3.org/ns/activitystreams#alsoKnownAs",
@@ -15,6 +16,11 @@
     "currentCore": {
       "@id": "https://me-id.org/ns/did-me#currentCore",
       "@type": "https://w3id.org/security#multibase"
+    },
+
+    "coreCbor": {
+      "@id": "https://me-id.org/ns/did-me#coreCbor",
+      "@type": "xsd:string"
     },
 
     "EudiCredentialService": "https://me-id.org/ns/did-me#EudiCredentialService",
@@ -79,7 +85,7 @@
 
     "sig": {
       "@id": "https://me-id.org/ns/did-me#sig",
-      "@type": "https://w3id.org/security#multibase"
+      "@type": "xsd:string"
     },
 
     "prev": {
