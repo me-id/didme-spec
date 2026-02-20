@@ -329,6 +329,44 @@ pre code { white-space: pre-wrap; }
     <li><a href="#attestations" id="toc-attestations">attestations</a></li>
     <li><a href="#proof" id="toc-proof">proof</a></li>
     </ul></li>
+    <li><a href="#conformance-test-vectors-informative" id="toc-conformance-test-vectors-informative">15. Conformance Test
+    Vectors (Informative)</a>
+    <ul>
+    <li><a href="#context-canonical-prefix" id="toc-context-canonical-prefix">15.1 <span class="citation" data-cites="context">@context</span> Canonical Prefix</a>
+    <ul>
+    <li><a href="#valid" id="toc-valid">15.1.1 Valid</a></li>
+    <li><a href="#invalid" id="toc-invalid">15.1.2 Invalid</a></li>
+    <li><a href="#invalid-term-redefinition-in-additional-context" id="toc-invalid-term-redefinition-in-additional-context">15.1.3
+    Invalid (Term Redefinition in Additional Context)</a></li>
+    </ul></li>
+    <li><a href="#corecbor-and-currentcore-consistency" id="toc-corecbor-and-currentcore-consistency">15.2
+    <code>coreCbor</code> and <code>currentCore</code> Consistency</a>
+    <ul>
+    <li><a href="#valid-1" id="toc-valid-1">15.2.1 Valid</a></li>
+    <li><a href="#invalid-1" id="toc-invalid-1">15.2.2 Invalid</a></li>
+    </ul></li>
+    <li><a href="#sequence-prev-and-keyhistory" id="toc-sequence-prev-and-keyhistory">15.3 <code>sequence</code>,
+    <code>prev</code>, and <code>keyHistory</code></a>
+    <ul>
+    <li><a href="#valid-genesis" id="toc-valid-genesis">15.3.1 Valid
+    Genesis</a></li>
+    <li><a href="#invalid-non-genesis" id="toc-invalid-non-genesis">15.3.2 Invalid Non-Genesis</a></li>
+    </ul></li>
+    <li><a href="#core-attestation-validation" id="toc-core-attestation-validation">15.4 Core Attestation
+    Validation</a>
+    <ul>
+    <li><a href="#valid-2" id="toc-valid-2">15.4.1 Valid</a></li>
+    <li><a href="#invalid-2" id="toc-invalid-2">15.4.2 Invalid</a></li>
+    </ul></li>
+    <li><a href="#data-integrity-proof-behavior" id="toc-data-integrity-proof-behavior">15.5 Data Integrity Proof
+    Behavior</a>
+    <ul>
+    <li><a href="#valid-supported-suite" id="toc-valid-supported-suite">15.5.1 Valid (Supported
+    Suite)</a></li>
+    <li><a href="#unsupported-suite-handling" id="toc-unsupported-suite-handling">15.5.2 Unsupported Suite
+    Handling</a></li>
+    </ul></li>
+    </ul></li>
     </ul></li>
     </ul>
   </nav>
@@ -1072,8 +1110,9 @@ signature(new-core-cbor) verifies under new.updatePolicy.allowedVerificationMeth
     <td>The first 3 entries MUST be, in order:
     <code>https://www.w3.org/ns/did/v1</code>,
     <code>https://w3id.org/security/multikey/v1</code>,
-    <code>https://did-me.org/ns/did-me/v1</code>. Additional contexts MAY
-    follow and MUST NOT redefine terms from the canonical tuple.</td>
+    <code>https://did-me.org/ns/did-me/v1</code>. Additional contexts
+    MAY follow and MUST NOT redefine terms from the canonical
+    tuple.</td>
     </tr>
     <tr>
     <td>id</td>
@@ -1490,6 +1529,125 @@ signature(new-core-cbor) verifies under new.updatePolicy.allowedVerificationMeth
     </tr>
     </tbody>
     </table>
+    <hr />
+    <h2 id="conformance-test-vectors-informative">15. Conformance Test
+    Vectors (Informative)</h2>
+    <p>This section provides implementation-oriented conformance
+    vectors. It is informative and does not replace normative
+    requirements in Sections 5 through 14.</p>
+    <h3 id="context-canonical-prefix">15.1 <span class="citation" data-cites="context">@context</span> Canonical Prefix</h3>
+    <h4 id="valid">15.1.1 Valid</h4>
+    <p>The first three <code>@context</code> entries match the canonical
+    tuple in order:</p>
+    <pre><code>&quot;@context&quot;: [
+  &quot;https://www.w3.org/ns/did/v1&quot;,
+  &quot;https://w3id.org/security/multikey/v1&quot;,
+  &quot;https://did-me.org/ns/did-me/v1&quot;,
+  &quot;https://example.org/extra-context&quot;
+]</code></pre>
+    <p>Expected result: <strong>ACCEPT</strong></p>
+    <h4 id="invalid">15.1.2 Invalid</h4>
+    <p>Wrong order in first three entries:</p>
+    <pre><code>&quot;@context&quot;: [
+  &quot;https://w3id.org/security/multikey/v1&quot;,
+  &quot;https://www.w3.org/ns/did/v1&quot;,
+  &quot;https://did-me.org/ns/did-me/v1&quot;
+]</code></pre>
+    <p>Expected result: <strong>REJECT</strong></p>
+    <h4 id="invalid-term-redefinition-in-additional-context">15.1.3
+    Invalid (Term Redefinition in Additional Context)</h4>
+    <p>Additional context attempts to redefine a canonical term:</p>
+    <pre><code>&quot;@context&quot;: [
+  &quot;https://www.w3.org/ns/did/v1&quot;,
+  &quot;https://w3id.org/security/multikey/v1&quot;,
+  &quot;https://did-me.org/ns/did-me/v1&quot;,
+  {
+    &quot;currentCore&quot;: &quot;https://example.org/redefinedCurrentCore&quot;
+  }
+]</code></pre>
+    <p>Expected result: <strong>REJECT</strong></p>
+    <h3 id="corecbor-and-currentcore-consistency">15.2
+    <code>coreCbor</code> and <code>currentCore</code> Consistency</h3>
+    <h4 id="valid-1">15.2.1 Valid</h4>
+    <ul>
+    <li><code>coreCbor</code> decodes as canonical DAG-CBOR core
+    bytes</li>
+    <li>CID(core bytes) equals <code>currentCore</code></li>
+    </ul>
+    <p>Expected result: <strong>ACCEPT</strong></p>
+    <h4 id="invalid-1">15.2.2 Invalid</h4>
+    <ul>
+    <li><code>coreCbor</code> decodes, but CID(core bytes) does not
+    equal <code>currentCore</code></li>
+    </ul>
+    <p>Expected result: <strong>REJECT</strong></p>
+    <h3 id="sequence-prev-and-keyhistory">15.3 <code>sequence</code>,
+    <code>prev</code>, and <code>keyHistory</code></h3>
+    <h4 id="valid-genesis">15.3.1 Valid Genesis</h4>
+    <pre><code>&quot;sequence&quot;: 1,
+&quot;keyHistory&quot;: []</code></pre>
+    <p><code>prev</code> is omitted in the DID Document projection for
+    genesis.</p>
+    <p>Expected result: <strong>ACCEPT</strong></p>
+    <h4 id="invalid-non-genesis">15.3.2 Invalid Non-Genesis</h4>
+    <pre><code>&quot;sequence&quot;: 3,
+&quot;keyHistory&quot;: [&quot;cidA&quot;, &quot;cidB&quot;],
+&quot;prev&quot;: &quot;cidA&quot;</code></pre>
+    <p>Expected result: <strong>REJECT</strong> (<code>prev</code> MUST
+    equal last <code>keyHistory</code> entry for
+    <code>sequence &gt; 1</code>)</p>
+    <h3 id="core-attestation-validation">15.4 Core Attestation
+    Validation</h3>
+    <h4 id="valid-2">15.4.1 Valid</h4>
+    <pre><code>&quot;attestations&quot;: [
+  {
+    &quot;alg&quot;: &quot;ML-DSA-87&quot;,
+    &quot;vm&quot;: &quot;#mldsa87-root&quot;,
+    &quot;sig&quot;: &quot;&lt;valid-base64url-signature-over-coreCbor-bytes&gt;&quot;
+  }
+]</code></pre>
+    <p>Expected result: <strong>ACCEPT</strong> when: - <code>vm</code>
+    exists in <code>verificationMethod</code> - <code>alg</code> matches
+    verification method algorithm - decoded <code>sig</code> verifies
+    over decoded <code>coreCbor</code> bytes</p>
+    <h4 id="invalid-2">15.4.2 Invalid</h4>
+    <pre><code>&quot;attestations&quot;: [
+  {
+    &quot;alg&quot;: &quot;ML-DSA-87&quot;,
+    &quot;vm&quot;: &quot;#mldsa87-root&quot;,
+    &quot;sig&quot;: &quot;!!!not-base64url!!!&quot;
+  }
+]</code></pre>
+    <p>Expected result: <strong>REJECT</strong></p>
+    <h3 id="data-integrity-proof-behavior">15.5 Data Integrity Proof
+    Behavior</h3>
+    <h4 id="valid-supported-suite">15.5.1 Valid (Supported Suite)</h4>
+    <pre><code>&quot;proof&quot;: {
+  &quot;type&quot;: &quot;DataIntegrityProof&quot;,
+  &quot;cryptosuite&quot;: &quot;es256-jws-cid-2025&quot;,
+  &quot;proofPurpose&quot;: &quot;assertionMethod&quot;,
+  &quot;verificationMethod&quot;: &quot;#p256&quot;,
+  &quot;created&quot;: &quot;2026-01-01T00:00:00Z&quot;,
+  &quot;jws&quot;: &quot;&lt;valid-compact-jws&gt;&quot;
+}</code></pre>
+    <p>Expected result: - <strong>ACCEPT</strong> only if all
+    cryptosuite checks pass, including: - <code>type</code> is
+    <code>DataIntegrityProof</code> - <code>cryptosuite</code> is
+    <code>es256-jws-cid-2025</code> - protected JWS header is exactly
+    <code>{&quot;alg&quot;:&quot;ES256&quot;}</code> - payload equals
+    <code>currentCore</code> - ES256 signature verifies with the
+    referenced P-256 verification method - proof remains
+    non-authoritative for update validity</p>
+    <h4 id="unsupported-suite-handling">15.5.2 Unsupported Suite
+    Handling</h4>
+    <pre><code>&quot;proof&quot;: {
+  &quot;type&quot;: &quot;DataIntegrityProof&quot;,
+  &quot;cryptosuite&quot;: &quot;unsupported-suite&quot;,
+  &quot;jws&quot;: &quot;header.payload.signature&quot;
+}</code></pre>
+    <p>Expected result: - proof treated as <strong>unsupported</strong>
+    - proof MUST NOT be treated as valid - core-based DID validity
+    processing continues</p>
   </main>
 
 </div>

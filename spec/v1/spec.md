@@ -1032,6 +1032,23 @@ Wrong order in first three entries:
 
 Expected result: **REJECT**
 
+#### 15.1.3 Invalid (Term Redefinition in Additional Context)
+
+Additional context attempts to redefine a canonical term:
+
+~~~
+"@context": [
+  "https://www.w3.org/ns/did/v1",
+  "https://w3id.org/security/multikey/v1",
+  "https://did-me.org/ns/did-me/v1",
+  {
+    "currentCore": "https://example.org/redefinedCurrentCore"
+  }
+]
+~~~
+
+Expected result: **REJECT**
+
 ### 15.2 `coreCbor` and `currentCore` Consistency
 
 #### 15.2.1 Valid
@@ -1053,9 +1070,10 @@ Expected result: **REJECT**
 
 ~~~
 "sequence": 1,
-"keyHistory": [],
-// prev omitted
+"keyHistory": []
 ~~~
+
+`prev` is omitted in the DID Document projection for genesis.
 
 Expected result: **ACCEPT**
 
@@ -1118,7 +1136,12 @@ Expected result: **REJECT**
 ~~~
 
 Expected result:
-- **ACCEPT** if suite is supported and JWS verifies against `currentCore`
+- **ACCEPT** only if all cryptosuite checks pass, including:
+  - `type` is `DataIntegrityProof`
+  - `cryptosuite` is `es256-jws-cid-2025`
+  - protected JWS header is exactly `{"alg":"ES256"}`
+  - payload equals `currentCore`
+  - ES256 signature verifies with the referenced P-256 verification method
 - proof remains non-authoritative for update validity
 
 #### 15.5.2 Unsupported Suite Handling
