@@ -338,8 +338,8 @@ pre code { white-space: pre-wrap; }
     (v1)</h1>
     <p><strong>Status:</strong> Beta<br />
     <strong>Specification URI:</strong>
-    https://me-id.org/ns/did-me/spec/v1 <strong>JSON-LD
-    Context:</strong> https://me-id.org/ns/did-me/v1</p>
+    https://did-me.org/ns/did-me/spec/v1 <strong>JSON-LD
+    Context:</strong> https://did-me.org/ns/did-me/v1</p>
     <hr />
     <h2 id="introduction">1. Introduction</h2>
     <p><code>did:me</code> is a DID method designed for:</p>
@@ -459,7 +459,7 @@ pre code { white-space: pre-wrap; }
     <p><code>did:me</code> supports optional, method-specific properties
     that extend the base DID Document data model. These properties are
     defined in the did:me JSON-LD context:</p>
-    <p>https://me-id.org/ns/did-me/v1</p>
+    <p>https://did-me.org/ns/did-me/v1</p>
     <p>The context defines terms such as: - currentCore - keyHistory -
     attestations - updatePolicy - domainVerification - and additional
     optional metadata fields (e.g., hardwareBound, biometricProtected,
@@ -861,7 +861,7 @@ signature(new-core-cbor) verifies under new.updatePolicy.allowedVerificationMeth
     <code>proof</code> — optional Data Integrity Proof (P-256) over
     currentCore - <code>domainVerification</code> — optional DNS/HTTP
     domain-binding - any other optional terms defined in the JSON-LD
-    context at: https://me-id.org/ns/did-me/v1</p>
+    context at: https://did-me.org/ns/did-me/v1</p>
     <p>Processors that do not recognize these fields MUST ignore them,
     per DID Core rules. When projecting from core to DID Document JSON,
     <code>prev</code> MUST be omitted when <code>core.prev</code> is
@@ -905,7 +905,7 @@ signature(new-core-cbor) verifies under new.updatePolicy.allowedVerificationMeth
     extensions. Implementations MUST ignore any unrecognized terms,
     consistent with DID Core processing rules.</p>
     <p>The did:me JSON-LD context is published at
-    https://me-id.org/ns/did-me/v1.</p>
+    https://did-me.org/ns/did-me/v1.</p>
     <p>This context defines: - method-specific terms (sequence, prev,
     currentCore, coreCbor, keyHistory) - metadata terms (updatePolicy,
     attestations, domainVerification) - service types (e.g.,
@@ -922,7 +922,7 @@ signature(new-core-cbor) verifies under new.updatePolicy.allowedVerificationMeth
     did:me context tuple, in this exact order: 1.
     <code>https://www.w3.org/ns/did/v1</code> 2.
     <code>https://w3id.org/security/multikey/v1</code> 3.
-    <code>https://me-id.org/ns/did-me/v1</code> Additional contexts MAY
+    <code>https://did-me.org/ns/did-me/v1</code> Additional contexts MAY
     follow and MUST NOT redefine terms from the canonical tuple.
     Conformance checkers and validators SHOULD reject DID Documents
     whose additional contexts redefine terms from the canonical
@@ -1072,7 +1072,7 @@ signature(new-core-cbor) verifies under new.updatePolicy.allowedVerificationMeth
     <td>The first 3 entries MUST be, in order:
     <code>https://www.w3.org/ns/did/v1</code>,
     <code>https://w3id.org/security/multikey/v1</code>,
-    <code>https://me-id.org/ns/did-me/v1</code>. Additional contexts MAY
+    <code>https://did-me.org/ns/did-me/v1</code>. Additional contexts MAY
     follow and MUST NOT redefine terms from the canonical tuple.</td>
     </tr>
     <tr>

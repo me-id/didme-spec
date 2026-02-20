@@ -2,8 +2,8 @@
 # did:me Method Specification (v1)
 
 **Status:** Beta  
-**Specification URI:** https://me-id.org/ns/did-me/spec/v1 
-**JSON-LD Context:** https://me-id.org/ns/did-me/v1
+**Specification URI:** https://did-me.org/ns/did-me/spec/v1 
+**JSON-LD Context:** https://did-me.org/ns/did-me/v1
 
 ---
 
@@ -127,7 +127,7 @@ A `did:me` DID Document is a standard DID Document projected from a signed core 
 
 `did:me` supports optional, method-specific properties that extend the base DID Document data model. These properties are defined in the did:me JSON-LD context:
 
-https://me-id.org/ns/did-me/v1
+https://did-me.org/ns/did-me/v1
 
 The context defines terms such as:
 - currentCore
@@ -605,7 +605,7 @@ The DID Document MAY include additional non-authoritative metadata that does not
 - `proof` — optional Data Integrity Proof (P-256) over currentCore
 - `domainVerification` — optional DNS/HTTP domain-binding
 - any other optional terms defined in the JSON-LD context at:
-https://me-id.org/ns/did-me/v1
+https://did-me.org/ns/did-me/v1
 
 Processors that do not recognize these fields MUST ignore them, per DID Core rules.
 When projecting from core to DID Document JSON, `prev` MUST be omitted when `core.prev` is null (genesis state) and MUST be present as a non-null CID value when `sequence > 1`.
@@ -638,7 +638,7 @@ Resolvers MUST accept at least one valid domain-verification method. Support for
 
 `did:me JSON-LD` context provides optional metadata extensions. Implementations MUST ignore any unrecognized terms, consistent with DID Core processing rules.
 
-The did:me JSON-LD context is published at https://me-id.org/ns/did-me/v1.
+The did:me JSON-LD context is published at https://did-me.org/ns/did-me/v1.
 
 This context defines:
 - method-specific terms (sequence, prev, currentCore, coreCbor, keyHistory)
@@ -655,7 +655,7 @@ The JSON-LD context MUST be included in all did:me DID Documents to guarantee co
 The first three `@context` entries MUST be the canonical did:me context tuple, in this exact order:
 1. `https://www.w3.org/ns/did/v1`
 2. `https://w3id.org/security/multikey/v1`
-3. `https://me-id.org/ns/did-me/v1`
+3. `https://did-me.org/ns/did-me/v1`
 Additional contexts MAY follow and MUST NOT redefine terms from the canonical tuple.
 Conformance checkers and validators SHOULD reject DID Documents whose additional contexts redefine terms from the canonical tuple.
 
@@ -773,7 +773,7 @@ This table defines for every DID Document field:
 
 Field | Required | Nullable | Emit When Empty | Notes
 ------|----------|----------|-----------------|------
-@context | Yes | No | N/A | The first 3 entries MUST be, in order: `https://www.w3.org/ns/did/v1`, `https://w3id.org/security/multikey/v1`, `https://me-id.org/ns/did-me/v1`. Additional contexts MAY follow and MUST NOT redefine terms from the canonical tuple.
+@context | Yes | No | N/A | The first 3 entries MUST be, in order: `https://www.w3.org/ns/did/v1`, `https://w3id.org/security/multikey/v1`, `https://did-me.org/ns/did-me/v1`. Additional contexts MAY follow and MUST NOT redefine terms from the canonical tuple.
 id | Yes | No | N/A | MUST be a valid `did:me:` identifier.
 controller | Yes | No | N/A | MUST be either: (a) a `did:me:` string, or (b) a non-empty array of `did:me:` strings.
 alsoKnownAs | No | No | Omit if empty | Optional. MUST be an array when present.
@@ -994,3 +994,144 @@ A *non-authoritative* P-256 Data Integrity Proof for compatibility with ZK syste
 | **Issuer DID** (Harvard, banks, orgs) | Ed25519 + ML-DSA-87 + P-256 | ML-DSA-87 (primary) + Ed25519 + P-256 | Ed25519, ML-DSA-87, P-256 | Optional | **ML-DSA-87 AND Ed25519** | Optional dual or PQ-only |
 | **Messaging DID** (fast, throwaway, persona-tied) | Ed25519 (+ optional P-256) | None or P-256 if ZK required | Ed25519, P-256, X25519, ML-KEM-768, ML-KEM-1024 | X25519 + ML-KEM-768 and/or ML-KEM-1024 | Ed25519 | None |
 | **Payment / Wallet DID** (optional specialization) | secp256k1 + optional P-256 | Optional | secp256k1, P-256 | Rare | secp256k1 | Optional |
+
+---
+
+## 15. Conformance Test Vectors (Informative)
+
+This section provides implementation-oriented conformance vectors. It is informative and does not replace normative requirements in Sections 5 through 14.
+
+### 15.1 @context Canonical Prefix
+
+#### 15.1.1 Valid
+
+The first three `@context` entries match the canonical tuple in order:
+
+~~~
+"@context": [
+  "https://www.w3.org/ns/did/v1",
+  "https://w3id.org/security/multikey/v1",
+  "https://did-me.org/ns/did-me/v1",
+  "https://example.org/extra-context"
+]
+~~~
+
+Expected result: **ACCEPT**
+
+#### 15.1.2 Invalid
+
+Wrong order in first three entries:
+
+~~~
+"@context": [
+  "https://w3id.org/security/multikey/v1",
+  "https://www.w3.org/ns/did/v1",
+  "https://did-me.org/ns/did-me/v1"
+]
+~~~
+
+Expected result: **REJECT**
+
+### 15.2 `coreCbor` and `currentCore` Consistency
+
+#### 15.2.1 Valid
+
+- `coreCbor` decodes as canonical DAG-CBOR core bytes
+- CID(core bytes) equals `currentCore`
+
+Expected result: **ACCEPT**
+
+#### 15.2.2 Invalid
+
+- `coreCbor` decodes, but CID(core bytes) does not equal `currentCore`
+
+Expected result: **REJECT**
+
+### 15.3 `sequence`, `prev`, and `keyHistory`
+
+#### 15.3.1 Valid Genesis
+
+~~~
+"sequence": 1,
+"keyHistory": [],
+// prev omitted
+~~~
+
+Expected result: **ACCEPT**
+
+#### 15.3.2 Invalid Non-Genesis
+
+~~~
+"sequence": 3,
+"keyHistory": ["cidA", "cidB"],
+"prev": "cidA"
+~~~
+
+Expected result: **REJECT** (`prev` MUST equal last `keyHistory` entry for `sequence > 1`)
+
+### 15.4 Core Attestation Validation
+
+#### 15.4.1 Valid
+
+~~~
+"attestations": [
+  {
+    "alg": "ML-DSA-87",
+    "vm": "#mldsa87-root",
+    "sig": "<valid-base64url-signature-over-coreCbor-bytes>"
+  }
+]
+~~~
+
+Expected result: **ACCEPT** when:
+- `vm` exists in `verificationMethod`
+- `alg` matches verification method algorithm
+- decoded `sig` verifies over decoded `coreCbor` bytes
+
+#### 15.4.2 Invalid
+
+~~~
+"attestations": [
+  {
+    "alg": "ML-DSA-87",
+    "vm": "#mldsa87-root",
+    "sig": "!!!not-base64url!!!"
+  }
+]
+~~~
+
+Expected result: **REJECT**
+
+### 15.5 Data Integrity Proof Behavior
+
+#### 15.5.1 Valid (Supported Suite)
+
+~~~
+"proof": {
+  "type": "DataIntegrityProof",
+  "cryptosuite": "es256-jws-cid-2025",
+  "proofPurpose": "assertionMethod",
+  "verificationMethod": "#p256",
+  "created": "2026-01-01T00:00:00Z",
+  "jws": "<valid-compact-jws>"
+}
+~~~
+
+Expected result:
+- **ACCEPT** if suite is supported and JWS verifies against `currentCore`
+- proof remains non-authoritative for update validity
+
+#### 15.5.2 Unsupported Suite Handling
+
+~~~
+"proof": {
+  "type": "DataIntegrityProof",
+  "cryptosuite": "unsupported-suite",
+  "jws": "header.payload.signature"
+}
+~~~
+
+Expected result:
+- proof treated as **unsupported**
+- proof MUST NOT be treated as valid
+- core-based DID validity processing continues

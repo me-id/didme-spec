@@ -2,7 +2,7 @@
   "@context": {
     "@version": 1.1,
     "@protected": true,
-    "_comment": "This file is hosted at https://me-id.org/ns/did-me/v1",
+    "_comment": "This file is hosted at https://did-me.org/ns/did-me/v1",
 
     "id": "@id",
     "type": "@type",
@@ -14,97 +14,97 @@
     },
 
     "currentCore": {
-      "@id": "https://me-id.org/ns/did-me#currentCore",
+      "@id": "https://did-me.org/ns/did-me#currentCore",
       "@type": "https://w3id.org/security#multibase"
     },
 
     "coreCbor": {
-      "@id": "https://me-id.org/ns/did-me#coreCbor",
+      "@id": "https://did-me.org/ns/did-me#coreCbor",
       "@type": "xsd:string"
     },
 
-    "EudiCredentialService": "https://me-id.org/ns/did-me#EudiCredentialService",
+    "EudiCredentialService": "https://did-me.org/ns/did-me#EudiCredentialService",
 
     "eudiLevelOfAssurance": {
-      "@id": "https://me-id.org/ns/did-me#eudiLevelOfAssurance",
+      "@id": "https://did-me.org/ns/did-me#eudiLevelOfAssurance",
       "@type": "xsd:string"
     },
 
     "eudiSchemaVersion": {
-      "@id": "https://me-id.org/ns/did-me#eudiSchemaVersion",
+      "@id": "https://did-me.org/ns/did-me#eudiSchemaVersion",
       "@type": "xsd:string"
     },
 
     "hardwareBound": {
-      "@id": "https://me-id.org/ns/did-me#hardwareBound",
+      "@id": "https://did-me.org/ns/did-me#hardwareBound",
       "@type": "xsd:boolean"
     },
 
     "biometricProtected": {
-      "@id": "https://me-id.org/ns/did-me#biometricProtected",
+      "@id": "https://did-me.org/ns/did-me#biometricProtected",
       "@type": "xsd:boolean"
     },
 
     "userVerificationMethod": {
-      "@id": "https://me-id.org/ns/did-me#userVerificationMethod",
+      "@id": "https://did-me.org/ns/did-me#userVerificationMethod",
       "@type": "xsd:string",
       "_comment_userVerificationMethod": "Allowed values: face, fingerprint, pin, passcode, password, iris, voice, pattern, none"
     },
 
     "deviceModel": {
-      "@id": "https://me-id.org/ns/did-me#deviceModel",
+      "@id": "https://did-me.org/ns/did-me#deviceModel",
       "@type": "xsd:string"
     },
 
     "keyHistory": {
-      "@id": "https://me-id.org/ns/did-me#keyHistory",
+      "@id": "https://did-me.org/ns/did-me#keyHistory",
       "@container": "@list",
       "@type": "https://w3id.org/security#multibase"
     },
 
     "updatePolicy": {
-      "@id": "https://me-id.org/ns/did-me#updatePolicy",
+      "@id": "https://did-me.org/ns/did-me#updatePolicy",
       "@type": "@json"
     },
 
     "attestations": {
-      "@id": "https://me-id.org/ns/did-me#attestations",
+      "@id": "https://did-me.org/ns/did-me#attestations",
       "@container": "@set",
       "@type": "@json"
     },
 
     "alg": {
-      "@id": "https://me-id.org/ns/did-me#alg",
+      "@id": "https://did-me.org/ns/did-me#alg",
       "@type": "xsd:string"
     },
 
     "vm": {
-      "@id": "https://me-id.org/ns/did-me#vm",
+      "@id": "https://did-me.org/ns/did-me#vm",
       "@type": "@id"
     },
 
     "sig": {
-      "@id": "https://me-id.org/ns/did-me#sig",
+      "@id": "https://did-me.org/ns/did-me#sig",
       "@type": "xsd:string"
     },
 
     "prev": {
-      "@id": "https://me-id.org/ns/did-me#prev",
+      "@id": "https://did-me.org/ns/did-me#prev",
       "@type": "https://w3id.org/security#multibase"
     },
 
     "sequence": {
-      "@id": "https://me-id.org/ns/did-me#sequence",
+      "@id": "https://did-me.org/ns/did-me#sequence",
       "@type": "xsd:integer"
     },
 
     "format": {
-      "@id": "https://me-id.org/ns/did-me#format",
+      "@id": "https://did-me.org/ns/did-me#format",
       "@type": "xsd:string"
     },
 
     "attestation": {
-      "@id": "https://me-id.org/ns/did-me#attestation",
+      "@id": "https://did-me.org/ns/did-me#attestation",
       "@type": "@json"
     },
 
@@ -114,14 +114,14 @@
     },
 
     "domainVerification": {
-      "@id": "https://me-id.org/ns/did-me#domainVerification",
+      "@id": "https://did-me.org/ns/did-me#domainVerification",
       "@container": "@set",
       "@type": "@json"
     },
 
-    "DnsTxtVerification": "https://me-id.org/ns/did-me#DnsTxtVerification",
+    "DnsTxtVerification": "https://did-me.org/ns/did-me#DnsTxtVerification",
     
-    "HttpsWellKnownVerification": "https://me-id.org/ns/did-me#HttpsWellKnownVerification"
+    "HttpsWellKnownVerification": "https://did-me.org/ns/did-me#HttpsWellKnownVerification"
 
   }
 }
