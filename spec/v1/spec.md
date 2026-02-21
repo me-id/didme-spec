@@ -2,7 +2,7 @@
 # did:me Method Specification (v1)
 
 **Status:** Beta  
-**Specification URI:** https://did-me.org/ns/did-me/spec/v1 
+**Specification URI:** https://did-me.org/spec/v1/ 
 **JSON-LD Context:** https://did-me.org/ns/did-me/v1
 
 ---
